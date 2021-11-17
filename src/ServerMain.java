@@ -35,24 +35,26 @@ public class ServerMain {
         File networkFile = new File("temp-server.pdf");
 
         ServerSocket ss = new ServerSocket(3333);
-        System.out.println("Waiting connection");
-        Socket socket = ss.accept();
-        System.out.println("Connection from: " + socket);
+        int i = 0;
+        while (i < 5) {
+            System.out.println("Waiting connection");
+            Socket socket = ss.accept();
+            System.out.println("Connection from: " + socket);
 
-        // Stream to read request from socket
-        InputStream inputStream = socket.getInputStream();
-        DataInputStream dataInputStream = new DataInputStream(inputStream);
-        // Stream to write response to socket
-        DataOutputStream outSocket = new DataOutputStream(socket.getOutputStream());
+            // Stream to read request from socket
+            InputStream inputStream = socket.getInputStream();
+            DataInputStream dataInputStream = new DataInputStream(inputStream);
+            // Stream to write response to socket
+            DataOutputStream outSocket = new DataOutputStream(socket.getOutputStream());
 
 
-        // Stream to write the file to decrypt
-        OutputStream outFile = new FileOutputStream(networkFile);
+            // Stream to write the file to decrypt
+            OutputStream outFile = new FileOutputStream(networkFile);
 
-        Request request = readRequest(dataInputStream);
-        long fileLength = request.getLengthFile();
+            Request request = readRequest(dataInputStream);
+            long fileLength = request.getLengthFile();
 
-        FileManagement.receiveFile(inputStream, outFile, fileLength);
+            FileManagement.receiveFile(inputStream, outFile, fileLength);
         /*
         int readFromFile = 0;
         int bytesRead = 0;
@@ -65,20 +67,21 @@ public class ServerMain {
             outFile.write(readBuffer, 0, bytesRead);
         }*/
 
-        System.out.println("File length: " + networkFile.length());
+            System.out.println("File length: " + networkFile.length());
 
-        // HERE THE PASSWORD IS HARDCODED, YOU MUST REPLACE THAT WITH THE BRUTEFORCE PROCESS
-        String password = "test";
-        SecretKey serverKey = CryptoUtils.getKeyFromPassword(password);
+            // HERE THE PASSWORD IS HARDCODED, YOU MUST REPLACE THAT WITH THE BRUTEFORCE PROCESS
+            String password = "test";
+            SecretKey serverKey = CryptoUtils.getKeyFromPassword(password);
 
-        CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
+            CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
 
-        // Send the decryptedFile
-        InputStream inDecrypted = new FileInputStream(decryptedFile);
-        outSocket.writeLong(decryptedFile.length());
-        outSocket.flush();
-        FileManagement.sendFile(inDecrypted, outSocket);
-        /*
+            // Send the decryptedFile
+            InputStream inDecrypted = new FileInputStream(decryptedFile);
+            outSocket.writeLong(decryptedFile.length());
+            outSocket.flush();
+            FileManagement.sendFile(inDecrypted, outSocket);
+
+            /*
         int readCount;
         byte[] buffer = new byte[64];
         //read from the file and send it in the socket
@@ -86,11 +89,20 @@ public class ServerMain {
             outSocket.write(buffer, 0, readCount);
         }*/
 
-        dataInputStream.close();
-        inputStream.close();
-        inDecrypted.close();
-        outFile.close();
-        socket.close();
+            dataInputStream.close();
+            inputStream.close();
+            inDecrypted.close();
+            outFile.close();
+            socket.close();
+            i++;
+        }
 
+    }
+
+    private static class ClientHandler extends Thread {
+        @Override
+        public void run() {
+            super.run();
+        }
     }
 }
