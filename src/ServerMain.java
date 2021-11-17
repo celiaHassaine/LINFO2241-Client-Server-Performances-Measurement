@@ -27,9 +27,10 @@ public class ServerMain {
         return new Request(hashPwd, pwdLength, fileLength);
     }
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException,
-            InvalidKeySpecException, NoSuchPaddingException,
-            IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException
+    {
+        //TODO: Create a decryptedFile and networkFile for each client
+
         File decryptedFile = new File("test_file-decrypted-server.pdf");
         File networkFile = new File("temp-server.pdf");
 

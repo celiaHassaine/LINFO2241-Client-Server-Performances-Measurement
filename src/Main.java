@@ -39,13 +39,14 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        // TODO: Implement multiple client creations
         try{
             String password = "test";
             SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
 
-            File inputFile = new File("test_file.pdf");
-            File encryptedFile = new File("test_file-encrypted-client.pdf");
-            File decryptedClient = new File("test_file-decrypted-client.pdf");
+            File inputFile = new File("src/test_file.pdf");
+            File encryptedFile = new File("src/test_file-encrypted-client.pdf");
+            File decryptedClient = new File("src/test_file-decrypted-client.pdf");
 
             // This is an example to help you create your request
             CryptoUtils.encryptFile(keyGenerated, inputFile, encryptedFile);
