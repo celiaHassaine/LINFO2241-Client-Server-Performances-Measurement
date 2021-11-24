@@ -31,6 +31,7 @@ public class ServerMain
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException
     {
+        // TODO: Change hardcoded password
         boolean listening = true;
         int portNumber = 3333; // default port number
         if(args.length == 1) // port number specified in command line
@@ -94,7 +95,7 @@ public class ServerMain
 
                 FileManagement.receiveFile(inputStream, outFile, fileLength);
 
-                /*
+                    /*
                 int readFromFile = 0;
                 int bytesRead = 0;
                 byte[] readBuffer = new byte[64];
@@ -108,8 +109,9 @@ public class ServerMain
 
                 System.out.println("File length: " + networkFile.length());
 
-                // HERE THE PASSWORD IS HARDCODED, YOU MUST REPLACE THAT WITH THE BRUTEFORCE PROCESS
+                //TODO: HERE THE PASSWORD IS HARDCODED, YOU MUST REPLACE THAT WITH THE BRUTEFORCE PROCESS
                 String password = "test";
+                // String password = guessPassword();
 
                 SecretKey serverKey = CryptoUtils.getKeyFromPassword(password);
                 CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
@@ -141,5 +143,27 @@ public class ServerMain
                 e.printStackTrace();
             }
         }
+    }
+
+
+    // TODO: USE most commonly used passwords list given to be optimal
+    /**
+     * This function try to retrieve the initial string before beeing hashed. It uses a brute-force method
+     * to accomplish it
+     * @param hashPwd SHA-1 hash of the password used to derive the key of the encryption
+     * @param pwdLength Length of the clear password
+     */
+    public static String guessPassword(byte[] hashPwd, int pwdLength) throws
+    {
+        String guess = "";
+        byte[] hashGuess;
+        for(int i=0; i < pwdLength; i++)
+        {
+            if(hashGuess.equals(hashPwd))
+            {
+                return guess;
+            }
+        }
+        return "";
     }
 }
