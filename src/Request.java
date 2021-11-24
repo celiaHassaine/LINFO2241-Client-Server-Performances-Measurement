@@ -15,7 +15,6 @@ public class Request {
         return hashPwd;
     }
 
-
     public int getLengthPwd() {
         return pwdLength;
     }

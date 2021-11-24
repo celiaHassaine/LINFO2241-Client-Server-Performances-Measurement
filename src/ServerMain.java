@@ -110,8 +110,8 @@ public class ServerMain
                 System.out.println("File length: " + networkFile.length());
 
                 //TODO: HERE THE PASSWORD IS HARDCODED, YOU MUST REPLACE THAT WITH THE BRUTEFORCE PROCESS
-                String password = "test";
-                // String password = guessPassword();
+                //String password = "test";
+                String password = guessPassword(request.getHashPassword(), request.getLengthPwd());
 
                 SecretKey serverKey = CryptoUtils.getKeyFromPassword(password);
                 CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
@@ -146,6 +146,8 @@ public class ServerMain
     }
 
 
+
+    // TODO: IMPLEMENT BRUTE FORCE
     // TODO: USE most commonly used passwords list given to be optimal
     /**
      * This function try to retrieve the initial string before beeing hashed. It uses a brute-force method
@@ -153,15 +155,24 @@ public class ServerMain
      * @param hashPwd SHA-1 hash of the password used to derive the key of the encryption
      * @param pwdLength Length of the clear password
      */
-    public static String guessPassword(byte[] hashPwd, int pwdLength) throws
+    public static String guessPassword(byte[] hashPwd, int pwdLength)
     {
-        String guess = "";
+        char[] guess = new char[pwdLength];
         byte[] hashGuess;
-        for(int i=0; i < pwdLength; i++)
+
+        for(int i = 32; i < 128; i++) // usual characters begin at number 32 in ASCII table
         {
+            for(int j=0; j < pwdLength; j++)
+            {
+                guess[j] = (char) i;
+            }
+        }
+
+
+            hashGuess = ???;
             if(hashGuess.equals(hashPwd))
             {
-                return guess;
+                return guess.toString();
             }
         }
         return "";
