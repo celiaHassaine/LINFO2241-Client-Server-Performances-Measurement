@@ -44,9 +44,9 @@ public class Main {
             String password = "test";
             SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
 
-            File inputFile = new File("src/test_file.pdf");
-            File encryptedFile = new File("src/test_file-encrypted-client.pdf");
-            File decryptedClient = new File("src/test_file-decrypted-client.pdf");
+            File inputFile = new File("files/test_file.pdf");
+            File encryptedFile = new File("files/test_file-encrypted-client.pdf");
+            File decryptedClient = new File("files/test_file-decrypted-client.pdf");
 
             // This is an example to help you create your request
             CryptoUtils.encryptFile(keyGenerated, inputFile, encryptedFile);
