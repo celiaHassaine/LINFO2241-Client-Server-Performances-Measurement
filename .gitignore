@@ -8,3 +8,4 @@ out/production/LINFO2241_project/Request.class
 out/production/LINFO2241_project/ServerMain$ClientHandler.class
 out/production/LINFO2241_project/ServerMain.class
 out/production/LINFO2241_project/TestThread.class
+*.class

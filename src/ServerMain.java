@@ -31,7 +31,6 @@ public class ServerMain
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException
     {
-        // TODO: Change hardcoded password
         boolean listening = true;
         int portNumber = 3333; // default port number
         if(args.length == 1) // port number specified in command line
@@ -62,7 +61,8 @@ public class ServerMain
         }
     }
 
-    private static class ClientHandler extends Thread {
+    private static class ClientHandler extends Thread
+    {
         private Socket socket = null;
         //TODO: Create a decryptedFile and networkFile for each client
         File decryptedFile = new File("test_file-decrypted-server.pdf");
@@ -95,26 +95,47 @@ public class ServerMain
 
                 FileManagement.receiveFile(inputStream, outFile, fileLength);
 
-                    /*
+                /*
                 int readFromFile = 0;
                 int bytesRead = 0;
                 byte[] readBuffer = new byte[64];
 
                 System.out.println("[Server] File length: "+ fileLength);
-                while((readFromFile < fileLength)){
-                bytesRead = inputStream.read(readBuffer);
-                readFromFile += bytesRead;
-                outFile.write(readBuffer, 0, bytesRead);
-                }*/
+                while((readFromFile < fileLength))
+                {
+                    bytesRead = inputStream.read(readBuffer);
+                    readFromFile += bytesRead;
+                    outFile.write(readBuffer, 0, bytesRead);
+                }
+                */
 
                 System.out.println("File length: " + networkFile.length());
 
-                //TODO: HERE THE PASSWORD IS HARDCODED, YOU MUST REPLACE THAT WITH THE BRUTEFORCE PROCESS
-                //String password = "test";
-                String password = guessPassword(request.getHashPassword(), request.getLengthPwd());
+                // BRUTEFORCE:
+                // Password is determined by using a bruteforce method implemented in the class BruteForce
+                int pwdLength = request.getLengthPwd();
+                byte[] hashPwd = request.getHashPassword();
 
-                SecretKey serverKey = CryptoUtils.getKeyFromPassword(password);
-                CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
+                System.out.println("-- Starting bruteforce -- ");
+                BruteForce bruteForce = new BruteForce(pwdLength, hashPwd);
+                String pwdFound = "";
+                try
+                {
+
+                    pwdFound = bruteForce.getPassword();
+                    System.out.println("PASSWORD FOUND: " + pwdFound);
+
+                    System.out.println("-- End bruteforce -- ");
+                    SecretKey serverKey = CryptoUtils.getKeyFromPassword(pwdFound);
+                    CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
+
+                }
+                catch (PasswordNotFoundException e)
+                {
+                    e.printStackTrace();
+                    e.err();
+                    return;
+                }
 
 
                 // Send the decryptedFile
@@ -143,38 +164,5 @@ public class ServerMain
                 e.printStackTrace();
             }
         }
-    }
-
-
-
-    // TODO: IMPLEMENT BRUTE FORCE
-    // TODO: USE most commonly used passwords list given to be optimal
-    /**
-     * This function try to retrieve the initial string before beeing hashed. It uses a brute-force method
-     * to accomplish it
-     * @param hashPwd SHA-1 hash of the password used to derive the key of the encryption
-     * @param pwdLength Length of the clear password
-     */
-    public static String guessPassword(byte[] hashPwd, int pwdLength)
-    {
-        char[] guess = new char[pwdLength];
-        byte[] hashGuess;
-
-        for(int i = 32; i < 128; i++) // usual characters begin at number 32 in ASCII table
-        {
-            for(int j=0; j < pwdLength; j++)
-            {
-                guess[j] = (char) i;
-            }
-        }
-
-
-            hashGuess = ???;
-            if(hashGuess.equals(hashPwd))
-            {
-                return guess.toString();
-            }
-        }
-        return "";
     }
 }

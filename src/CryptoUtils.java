@@ -18,10 +18,10 @@ public class CryptoUtils {
      * @param inputFile File to encrypt
      * @param outputFile File where the encrypted result is written
      */
-    public static void encryptFile(SecretKey key,
-                              File inputFile, File outputFile) throws InvalidAlgorithmParameterException,
-            NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException,
-            BadPaddingException, InvalidKeyException {
+    public static void encryptFile(SecretKey key, File inputFile, File outputFile)
+            throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException,
+                    BadPaddingException, InvalidKeyException
+    {
         cryptographyOnFile(Cipher.ENCRYPT_MODE, key, inputFile, outputFile);
     }
 
@@ -78,8 +78,8 @@ public class CryptoUtils {
      * @param password The password from which the key will be derived
      * @return The key for the encryption
      */
-    public static SecretKey getKeyFromPassword(String password) throws NoSuchAlgorithmException,
-            InvalidKeySpecException {
+    public static SecretKey getKeyFromPassword(String password) throws NoSuchAlgorithmException, InvalidKeySpecException
+    {
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         KeySpec spec = new PBEKeySpec(password.toCharArray(), " ".getBytes(), 65536, 128);
         return new SecretKeySpec(factory.generateSecret(spec).getEncoded(),"AES");

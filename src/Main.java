@@ -31,8 +31,9 @@ public class Main {
      * @param pwdLength Length of the clear password
      * @param fileLength Length of the encrypted file
      */
-    public static void sendRequest(DataOutputStream out, byte[] hashPwd, int pwdLength,
-                       long fileLength) throws IOException {
+    public static void sendRequest(DataOutputStream out, byte[] hashPwd, int pwdLength,long fileLength)
+            throws IOException
+    {
         out.write(hashPwd,0, 20);
         out.writeInt(pwdLength);
         out.writeLong(fileLength);
@@ -42,7 +43,7 @@ public class Main {
 
         boolean creating = true;
         int portNumber = 3333;
-        int nbThreads = 10;
+        int nbThreads = 1;
         int iThread = 0;
 
         while(creating && iThread < nbThreads)
@@ -57,7 +58,8 @@ public class Main {
 
     }
 
-    private static class ClientThread extends Thread {
+    private static class ClientThread extends Thread
+    {
         private int portNumber;
         //TODO: Create a decryptedFile and networkFile for each client
 
@@ -75,9 +77,9 @@ public class Main {
                 String password = "test";
                 SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
 
-                File inputFile = new File("src/test_file.pdf");
-                File encryptedFile = new File("src/test_file-encrypted-client.pdf");
-                File decryptedClient = new File("src/test_file-decrypted-client.pdf");
+                File inputFile = new File("test_file.pdf");
+                File encryptedFile = new File("test_file-encrypted-client.pdf");
+                File decryptedClient = new File("test_file-decrypted-client.pdf");
 
                 // This is an example to help you create your request
                 CryptoUtils.encryptFile(keyGenerated, inputFile, encryptedFile);
@@ -85,7 +87,7 @@ public class Main {
 
 
                 // Creating socket to connect to server (in this example it runs on the localhost on port 3333)
-                Socket socket = new Socket("2a02:a03f:c099:f200:5d6:15ce:da:1a3d", this.portNumber); // localhost
+                Socket socket = new Socket("localhost", this.portNumber);
                 System.out.println("Socket created");
 
 
@@ -93,6 +95,7 @@ public class Main {
                 // where the data must be sent to or received from, different kind of stream are used.
                 OutputStream outSocket = socket.getOutputStream();
                 DataOutputStream out = new DataOutputStream(outSocket);
+
                 InputStream inFile = new FileInputStream(encryptedFile);
                 DataInputStream inSocket = new DataInputStream(socket.getInputStream());
 
