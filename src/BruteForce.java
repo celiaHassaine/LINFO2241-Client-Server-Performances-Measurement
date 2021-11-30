@@ -19,8 +19,6 @@ public class BruteForce
         this.guess = new char[pwdLength];
         this.found = false;
         this.password = "";
-
-        bruteForce(0,pwdLength, guess);
     }
 
     /**
@@ -35,32 +33,29 @@ public class BruteForce
         return md.digest(data.getBytes());
     }
 
+    public void bruteForce()
+    {
+        bruteForce(0);
+    }
+
     /**
      * This function attempt to discover the password that gives the same SHA-1 as the one in arguments
      * @param i index of the character to increment in the array guess
-     * @param len length of the password
-     * @param guess estimation of the password
      */
-    public void bruteForce(int i, int len, char[] guess)
+    private void bruteForce(int i)
     {
-        if (i == len)
+        if (i == pwdLength)
         {
             try
             {
-                String str = "";
-                for(int j=0; j< len; j++)
-                {
-                    str += guess[j];
-                }
+                String str = String.copyValueOf(guess);
                 byte[] hashGuessed = hashSHA1(str);
-                if(Arrays.equals(hashGuessed,hashPwd))
+                if (Arrays.equals(hashGuessed,hashPwd))
                 {
                     this.found = true;
                     this.password = str;
-                    return;
                 }
-                else
-                    return;
+                return;
 
             }
             catch (NoSuchAlgorithmException e)
@@ -76,7 +71,7 @@ public class BruteForce
             for(char c = 'a'; c <= 'z' && !found; c++)
             {
                 guess[i] = c;
-                bruteForce(i+1, len, guess);
+                bruteForce(i+1);
             }
         }
     }
@@ -103,9 +98,10 @@ public class BruteForce
     {
         try
         {
-            String password = "1234";
+            String password = "abcd";
             byte[] hashPwd = hashSHA1(password);
-            BruteForce bruteForce = new BruteForce(4,hashPwd);
+            BruteForce bruteForce = new BruteForce(password.length(),hashPwd);
+            bruteForce.bruteForce();
             String pwd = "";
             try{
                 pwd = bruteForce.getPassword();
