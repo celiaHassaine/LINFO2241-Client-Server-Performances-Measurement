@@ -98,7 +98,7 @@ public class BruteForce
     {
         try
         {
-            String password = "abcd";
+            String password = "test";
             byte[] hashPwd = hashSHA1(password);
             BruteForce bruteForce = new BruteForce(password.length(),hashPwd);
             bruteForce.bruteForce();

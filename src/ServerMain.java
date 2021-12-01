@@ -29,16 +29,16 @@ public class ServerMain
         return new Request(hashPwd, pwdLength, fileLength);
     }
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException
+    public static void main(String[] args)
     {
         boolean listening = true;
-        int portNumber = 3333; // default port number
-        if(args.length == 1) // port number specified in command line
+        int portNumber = 3333;  // default port number
+        if(args.length == 1)    // port number specified in command line
         {
             portNumber = Integer.parseInt(args[0]);
         }
 
-        try (ServerSocket serverSocket = new ServerSocket(portNumber))
+        try (ServerSocket serverSocket = new ServerSocket(portNumber)) // TODO: add second arg backlog to record maximum number of incoming traffic
         {
             while (listening)
             // while listening and maximal number of queuing capacity of the OS's queue for incoming TCP
@@ -65,7 +65,7 @@ public class ServerMain
     {
         private Socket socket = null;
         //TODO: Create a decryptedFile and networkFile for each client
-        File decryptedFile = new File("test_file-decrypted-server.pdf");
+        File decryptedFile = new File("files/test_file-decrypted-server.pdf");
         File networkFile = new File("temp-server.pdf");
 
         public ClientHandler(Socket socket)

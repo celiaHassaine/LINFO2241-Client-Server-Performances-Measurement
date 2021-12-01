@@ -77,9 +77,9 @@ public class Main {
                 String password = "test";
                 SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
 
-                File inputFile = new File("test_file.pdf");
-                File encryptedFile = new File("test_file-encrypted-client.pdf");
-                File decryptedClient = new File("test_file-decrypted-client.pdf");
+                File inputFile = new File("files/test_file.pdf");
+                File encryptedFile = new File("files/test_file-encrypted-client.pdf");
+                File decryptedClient = new File("files/test_file-decrypted-client.pdf");
 
                 // This is an example to help you create your request
                 CryptoUtils.encryptFile(keyGenerated, inputFile, encryptedFile);
@@ -102,7 +102,7 @@ public class Main {
 
                 // SEND THE PROCESSING INFORMATION AND FILE
                 byte[] hashPwd = hashSHA1(password);
-                int pwdLength = 4;
+                int pwdLength = password.length();
                 long fileLength = encryptedFile.length();
                 sendRequest(out, hashPwd, pwdLength, fileLength);
                 out.flush();
