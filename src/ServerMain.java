@@ -12,7 +12,6 @@ import java.security.spec.InvalidKeySpecException;
 
 public class ServerMain
 {
-
     /**
      * @param in Stream from which to read the request
      * @return Request with information required by the server to process encrypted file
@@ -50,7 +49,7 @@ public class ServerMain
                 System.out.println("Connection from: " + clientSocket);
 
                 // create a thread to deal with each client;
-                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                ClientHandler clientHandler = new ClientHandler(clientSocket, true);
                 clientHandler.start();
             }
         }
@@ -64,14 +63,16 @@ public class ServerMain
     private static class ClientHandler extends Thread
     {
         private Socket socket = null;
+        private boolean isSmart;
         //TODO: Create a decryptedFile and networkFile for each client
         File decryptedFile = new File("test_file-decrypted-server.pdf");
         File networkFile = new File("temp-server.pdf");
 
-        public ClientHandler(Socket socket)
+        public ClientHandler(Socket socket, boolean isSmart)
         {
             super("ClientHandlerThread");
             this.socket = socket;
+            this.isSmart = isSmart;
         }
 
         @Override
@@ -117,12 +118,16 @@ public class ServerMain
                 byte[] hashPwd = request.getHashPassword();
 
                 System.out.println("-- Starting bruteforce -- ");
-                BruteForce bruteForce = new BruteForce(pwdLength, hashPwd);
+                BruteForce BF;
+                if(this.isSmart)
+                    BF = new DumbBruteForce(pwdLength, hashPwd);
+                else
+                    BF = new SmarterBruteForce(pwdLength, hashPwd, new File("")); //TODO: CHANGER DE PLACE CREATION DU DICTIONNAIRE
                 String pwdFound = "";
                 try
                 {
 
-                    pwdFound = bruteForce.getPassword();
+                    pwdFound = BF.bruteForce();
                     System.out.println("PASSWORD FOUND: " + pwdFound);
 
                     System.out.println("-- End bruteforce -- ");

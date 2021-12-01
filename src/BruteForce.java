@@ -2,14 +2,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-public class BruteForce
-// TODO: check extends Callable for the smarter version of the server
-{
-    private int pwdLength;
-    private byte[] hashPwd;
-    private char[] guess;
-    private boolean found;
-    private String password;
+abstract class BruteForce {
+    protected int pwdLength;
+    protected byte[] hashPwd;
+    protected char[] guess;
+    protected boolean found;
+    protected String password;
 
     public BruteForce(int pwdLength, byte[] hashPwd)
     {
@@ -19,6 +17,14 @@ public class BruteForce
         this.guess = new char[pwdLength];
         this.found = false;
         this.password = "";
+    }
+
+    public String getPassword() throws PasswordNotFoundException
+    {
+        if(password.equals(""))
+            throw new PasswordNotFoundException();
+        else
+            return password;
     }
 
     /**
@@ -33,16 +39,44 @@ public class BruteForce
         return md.digest(data.getBytes());
     }
 
-    public void bruteForce()
+    /**
+     * This function will serve in the SmarterBruteForce
+     * Adds the pair (hash(str), str) to the dictionary
+     * @param hash hash(str) to add as key in the dictionary
+     * @param str the string to add as value in the dictionary
+     */
+    protected void putDictionary(byte[] hash, String str)
     {
-        bruteForce(0);
+        return;
     }
 
     /**
-     * This function attempt to discover the password that gives the same SHA-1 as the one in arguments
-     * @param i index of the character to increment in the array guess
+     * This function will serve in the SmarterBruteForce
+     * Check if the given hashPwd is in the dictionary
+     * @return A string containing "" if hashPwd is not in the dictionary,
+     * A string str such as hash(str) = hashPwd if hashPwd is in the dictionary.
      */
-    private void bruteForce(int i)
+    protected String checkDictionary() {
+        return "";
+    }
+
+    /**
+     * Returns a string containing the password corresponding to hashPwd
+     */
+    public String bruteForce() throws PasswordNotFoundException
+    {
+        String d = checkDictionary();
+        this.password = (d.equals("")) ? this.bruteForce(0) : d;
+        return this.password;
+    }
+
+    /**
+     * This function attempt to discover the password that gives the same SHA-1 as hashPwd
+     * During his computation
+     * @param i index of the character to increment in the array guess
+     * @return
+     */
+    private String bruteForce(int i)
     {
         if (i == pwdLength)
         {
@@ -50,12 +84,13 @@ public class BruteForce
             {
                 String str = String.copyValueOf(guess);
                 byte[] hashGuessed = hashSHA1(str);
+                this.putDictionary(hashGuessed, str); // Active only for SmarterBruteForce
                 if (Arrays.equals(hashGuessed,hashPwd))
                 {
                     this.found = true;
                     this.password = str;
+                    return this.password;
                 }
-                return;
 
             }
             catch (NoSuchAlgorithmException e)
@@ -74,49 +109,6 @@ public class BruteForce
                 bruteForce(i+1);
             }
         }
+        return this.password;
     }
-
-    /**
-     * This function returns the password found by bruteforce method. It throws a PasswordNotFoundException
-     * if the password could not be found.
-     * @return String password found of throws an exception otherwise
-     * @throws PasswordNotFoundException
-     */
-    public String getPassword() throws PasswordNotFoundException
-    {
-        if(password.equals(""))
-            throw new PasswordNotFoundException();
-        else
-            return password;
-    }
-
-    /**
-     * This function is used to test the implementation of the bruteforce method
-     * @param args
-     */
-    public static void main(String[] args)
-    {
-        try
-        {
-            String password = "abcd";
-            byte[] hashPwd = hashSHA1(password);
-            BruteForce bruteForce = new BruteForce(password.length(),hashPwd);
-            bruteForce.bruteForce();
-            String pwd = "";
-            try{
-                pwd = bruteForce.getPassword();
-                System.out.println("PASSWORD FOUND: " + pwd);
-            }
-            catch (PasswordNotFoundException exception)
-            {
-                exception.err();
-            }
-
-        }
-        catch (NoSuchAlgorithmException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
 }
