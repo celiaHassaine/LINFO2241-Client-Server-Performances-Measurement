@@ -106,7 +106,7 @@ abstract class BruteForce {
             for(char c = 'a'; c <= 'z' && !found; c++)
             {
                 guess[i] = c;
-                bruteForce(i+1);
+                bruteForce(i+1); //TODO: multithreader ici pour la smartest version
             }
         }
         return this.password;

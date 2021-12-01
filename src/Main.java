@@ -11,6 +11,23 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 
+//TODO: TASK 1
+//TODO: Déplacer la création du dictionnaire en dehors des threads: Corentin
+//TODO: communiquer entre 2 pc différents sur un réseaux non local: Merlin
+//TODO: SmartestBruteForce ? Merlin & Corentin
+
+
+//TODO: TASK 2
+//TODO: implement a small client ap sending request at random times (choose some distribution) : Corentin
+//TODO: implement client application that open multiple TCP connections with server: Merlin
+//TODO: make some measurements with different request rate, difficulities : Corentin
+//TODO: compare with the 2 implementations of the bruteforce: Merlin
+
+//TODO: TASK 3
+
+
+//TODO: TASK 4
+
 
 public class Main {
 

@@ -17,7 +17,7 @@ public class DumbBruteForce extends BruteForce
     public static void main(String[] args) throws NoSuchAlgorithmException {
         try
         {
-            String password = "abcd";
+            String password = "test";
             byte[] hashPwd = hashSHA1(password);
             BruteForce bruteForce = new DumbBruteForce(password.length(),hashPwd);
             bruteForce.bruteForce();
