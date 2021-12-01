@@ -6,47 +6,57 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-public class SmarterBruteForce extends BruteForce {
-    private int pwdLength;
-    private byte[] hashPwd;
-    private char[] guess;
-    private boolean found;
-    private String password;
-    private Map<byte[], String> dictionary;
-    public SmarterBruteForce(int pwdLength, byte[] hashPwd, File file) throws FileNotFoundException, NoSuchAlgorithmException
+public class SmarterBruteForce extends BruteForce
+{
+    private Map<String, String> dictionary;
+    public SmarterBruteForce(int pwdLength, byte[] hashPwd, File file) throws NoSuchAlgorithmException
     {
         super(pwdLength, hashPwd);
         this.dictionary = new HashMap<>();
         this.computeDictionary(file);
     }
 
-    private void computeDictionary(File file) throws FileNotFoundException, NoSuchAlgorithmException {
-        Scanner myReader = new Scanner(file);
+    private void computeDictionary(File file) throws NoSuchAlgorithmException
+    {
+        Scanner myReader = null;
+        try {
+            myReader = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
         while (myReader.hasNextLine())
         {
             String data = myReader.nextLine();
-            this.dictionary.put(hashSHA1(data), data);
+            byte[] hash = hashSHA1(data);
+            this.dictionary.put(Arrays.toString(hash), data);
         }
         myReader.close();
     }
 
     @Override
-    // TODO : make bruteForce returns sth instead of just changing instances variables
-    public void bruteForce() {
-        if (this.dictionary.containsKey(hashPwd))
-        {
-            this.found = true;
-            this.password = this.dictionary.get(hashPwd);
-        }
-
-        else
-        {
-            super.bruteForce();
-        }
+    protected void putDictionary(byte[] hash, String str)
+    {
+        this.dictionary.put(Arrays.toString(hash), str);
     }
 
-    public static void main(String[] args)
+    @Override
+    protected String checkDictionary()
     {
-        System.out.println("Hello world");
+        if (this.dictionary.containsKey(Arrays.toString(hashPwd)))
+        {
+            System.out.println("Found in dictionary!");
+            return this.dictionary.get(Arrays.toString(hashPwd));
+        }
+        return "";
+    }
+
+    public static void main(String[] args) throws NoSuchAlgorithmException, PasswordNotFoundException {
+        String password = "starwars"; // starwars is in the 10k-most-common file
+        byte[] hashPwd = hashSHA1(password);
+        File file = new File("files/10k-most-common_filered.txt");
+        SmarterBruteForce SBF = new SmarterBruteForce(password.length(), hashPwd, file);
+        String pwd_found = SBF.bruteForce();
+        System.out.println("Password found : " + pwd_found);
     }
 }
