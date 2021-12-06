@@ -9,29 +9,30 @@ import java.util.Scanner;
 public class SmarterBruteForce extends BruteForce
 {
     private Map<String, String> dictionary;
-    public SmarterBruteForce(int pwdLength, byte[] hashPwd, File file) throws NoSuchAlgorithmException
+    public SmarterBruteForce(int pwdLength, byte[] hashPwd, Map<String, String> d) throws NoSuchAlgorithmException
     {
         super(pwdLength, hashPwd);
-        this.dictionary = new HashMap<>();
-        this.computeDictionary(file);
+        this.dictionary = d;
     }
 
-    private void computeDictionary(File file) throws NoSuchAlgorithmException
+    public static HashMap<String, String> computeDictionary(File file) throws NoSuchAlgorithmException
     {
+        HashMap<String, String> dictionary = new HashMap<>();
         Scanner myReader = null;
         try {
             myReader = new Scanner(file);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            return;
+            return null;
         }
         while (myReader.hasNextLine())
         {
             String data = myReader.nextLine();
             byte[] hash = hashSHA1(data);
-            this.dictionary.put(Arrays.toString(hash), data);
+            dictionary.put(Arrays.toString(hash), data);
         }
         myReader.close();
+        return dictionary;
     }
 
     @Override
@@ -55,7 +56,8 @@ public class SmarterBruteForce extends BruteForce
         String password = "starwars"; // starwars is in the 10k-most-common file
         byte[] hashPwd = hashSHA1(password);
         File file = new File("files/10k-most-common_filered.txt");
-        SmarterBruteForce SBF = new SmarterBruteForce(password.length(), hashPwd, file);
+        HashMap<String, String> dic = SmarterBruteForce.computeDictionary(file);
+        SmarterBruteForce SBF = new SmarterBruteForce(password.length(), hashPwd, dic);
         String pwd_found = SBF.bruteForce();
         System.out.println("Password found : " + pwd_found);
     }

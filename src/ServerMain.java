@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
 
 
 public class ServerMain
@@ -119,10 +120,9 @@ public class ServerMain
 
                 System.out.println("-- Starting bruteforce -- ");
                 BruteForce BF;
-                if(this.isSmart)
-                    BF = new DumbBruteForce(pwdLength, hashPwd);
-                else
-                    BF = new SmarterBruteForce(pwdLength, hashPwd, new File("")); //TODO: CHANGER DE PLACE CREATION DU DICTIONNAIRE
+                HashMap<String, String> dic = SmarterBruteForce.computeDictionary(new File("files/10k-most-common_filered.txt"));
+                BF = this.isSmart ? new SmarterBruteForce(pwdLength, hashPwd, dic) : new DumbBruteForce(pwdLength, hashPwd);
+
                 String pwdFound = "";
                 try
                 {
