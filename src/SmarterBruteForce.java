@@ -9,54 +9,58 @@ import java.util.Scanner;
 public class SmarterBruteForce extends BruteForce
 {
     private Map<String, String> dictionary;
-    public SmarterBruteForce(int pwdLength, byte[] hashPwd, File file) throws NoSuchAlgorithmException
+
+    public SmarterBruteForce(int pwdLength, byte[] hashPwd, Map<String, String> dictionary)
     {
         super(pwdLength, hashPwd);
-        this.dictionary = new HashMap<>();
-        this.computeDictionary(file);
+        this.dictionary = dictionary;
+        System.out.println("Started SmarterBruteForce");
+        if(dictionary.containsKey(Arrays.toString(super.hashPwd))) // password already present in the dictionary
+        {
+            System.out.println("Password found in the dictionary");
+            super.found = true;
+            super.password = dictionary.get(super.hashPwd);
+        }
+        else
+        {
+            System.out.println("Password NOT found in the dictionary");
+            super.bruteForce(0);
+        }
+        System.out.println("Ended SmarterBruteForce");
     }
 
-    private void computeDictionary(File file) throws NoSuchAlgorithmException
+    public static void main(String[] args) throws NoSuchAlgorithmException, PasswordNotFoundException
     {
-        Scanner myReader = null;
-        try {
-            myReader = new Scanner(file);
-        } catch (FileNotFoundException e) {
+        try
+        {
+            String password = "starwars";                       // starwars is in the 10k-most-common file
+            byte[] hashPwd = hashSHA1(password);
+
+            String filename = "files/10k-most-common_filered.txt";
+            Map<String, String> dic = null;
+            try
+            {
+                dic = ServerMain.createDictionary(filename);
+            }
+            catch (DictionaryCreationException e)
+            {
+                e.printStackTrace();
+            }
+            
+            BruteForce bruteForce = new SmarterBruteForce(password.length(),hashPwd, dic);
+            String pwd = "";
+            try{
+                pwd = bruteForce.getPassword();
+                System.out.println("PASSWORD FOUND: " + pwd);
+            }
+            catch (PasswordNotFoundException exception)
+            {
+                exception.err();
+            }
+        }
+        catch (NoSuchAlgorithmException e)
+        {
             e.printStackTrace();
-            return;
         }
-        while (myReader.hasNextLine())
-        {
-            String data = myReader.nextLine();
-            byte[] hash = hashSHA1(data);
-            this.dictionary.put(Arrays.toString(hash), data);
-        }
-        myReader.close();
-    }
-
-    @Override
-    protected void putDictionary(byte[] hash, String str)
-    {
-        this.dictionary.put(Arrays.toString(hash), str);
-    }
-
-    @Override
-    protected String checkDictionary()
-    {
-        if (this.dictionary.containsKey(Arrays.toString(hashPwd)))
-        {
-            System.out.println("Found in dictionary!");
-            return this.dictionary.get(Arrays.toString(hashPwd));
-        }
-        return "";
-    }
-
-    public static void main(String[] args) throws NoSuchAlgorithmException, PasswordNotFoundException {
-        String password = "starwars"; // starwars is in the 10k-most-common file
-        byte[] hashPwd = hashSHA1(password);
-        File file = new File("files/10k-most-common_filered.txt");
-        SmarterBruteForce SBF = new SmarterBruteForce(password.length(), hashPwd, file);
-        String pwd_found = SBF.bruteForce();
-        System.out.println("Password found : " + pwd_found);
     }
 }

@@ -26,8 +26,6 @@ import java.security.spec.InvalidKeySpecException;
 //TODO: TASK 3
 
 
-//TODO: TASK 4
-
 
 public class Main {
 
@@ -56,7 +54,9 @@ public class Main {
         out.writeLong(fileLength);
     }
 
-    public static void main(String[] args) {
+
+    public static void main(String[] args)
+    {
 
         boolean creating = true;
         int portNumber = 3333;
