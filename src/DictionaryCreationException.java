@@ -1,7 +1,8 @@
 public class DictionaryCreationException extends Exception
 {
-    public void err()
+    public void details()
     {
         System.err.println("DictionaryCreationException");
+        System.err.println("Problem in the dictionary creation");
     }
 }

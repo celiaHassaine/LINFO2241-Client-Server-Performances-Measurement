@@ -11,7 +11,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 public class DumbBruteForce extends BruteForce
-// TODO: check extends Callable for the smarter version of the server
 {
     public DumbBruteForce(int pwdLength, byte[] hashPwd)
     {
@@ -40,7 +39,7 @@ public class DumbBruteForce extends BruteForce
             }
             catch (PasswordNotFoundException exception)
             {
-                exception.err();
+                exception.details();
             }
 
         }
