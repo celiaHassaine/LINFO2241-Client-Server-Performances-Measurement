@@ -223,18 +223,15 @@ public class Main
                         InputStream inFile = new FileInputStream(encryptedFile);
                         sendRequest(out, requestId, hashPwd, pwdLength, fileLength);
                         out.flush();
+                        System.out.println("Before sending file");
                         FileManagement.sendFile(inFile, out);
+                        System.out.println("After sending file");
                         startTimes.put(requestId, System.currentTimeMillis());
                         System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
                         requestId++;
                         inter_request_time = gaussian(2, 1);
                         start_time = getCurrentTime();
-
-                        // ??? SHOULD WE ?
-                        /*outSocket.close();
-                        out.close();
-                        inFile.close();*/
                     }
                 }
             }
@@ -265,10 +262,8 @@ public class Main
         {
             System.out.println("Run ClientReceiver");
 
-            try
-            {
-                for(int iRequest = 0; iRequest < nbRequest; iRequest++)
-                {
+            try {
+                while (true) {
                     DataInputStream inSocket = new DataInputStream(socket.getInputStream());
 
                     int requestId = inSocket.readInt();
@@ -282,11 +277,12 @@ public class Main
 
                     OutputStream outFile = new FileOutputStream(decryptedClient);
                     FileManagement.receiveFile(inSocket, outFile, fileLengthServer);
-                    long deltaTime = System.currentTimeMillis()-startTimes.get(requestId);
-                    System.out.println("Time observed by the client : "+deltaTime+"ms");
+                    long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
+                    System.out.println("Time observed by the client : " + deltaTime + "ms");
                     //inSocket.close();
                     //outFile.close();
                 }
+
             }
             catch (IOException e)
             {
