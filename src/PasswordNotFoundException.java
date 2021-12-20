@@ -1,6 +1,6 @@
 public class PasswordNotFoundException extends Exception
 {
-    public void err()
+    public void details()
     {
         System.err.println("PasswordNotFoundException: password not found");
         System.err.println(" \t Does the password contain unhandled characters ?");
