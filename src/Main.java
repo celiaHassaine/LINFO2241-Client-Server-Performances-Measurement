@@ -213,7 +213,6 @@ public class Main
 
     private static class ClientReceiver extends Thread
     {
-        private final int portNumber;
         private long startTime;
         //TODO: Create a decryptedFile and networkFile for each client
 
@@ -223,7 +222,6 @@ public class Main
         public ClientReceiver(Socket socket)
         {
             super("ClientHandlerThread");
-            this.portNumber = portNumber;
             this.startTime = System.currentTimeMillis();
             this.socket = socket;
         }
