@@ -9,6 +9,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
 import java.util.Random;
 
 
@@ -27,7 +28,7 @@ import java.util.Random;
 public class Main
 {
     // CLIENT PARAMETERS
-    private static final int nbRequest = 2;
+    private static final int nbRequest = 1;
     private static final int pwdLength = 4;
 
     private static final String folderNameIn = "files/Files-5MB/";
@@ -35,6 +36,7 @@ public class Main
     private static final String[] passwords = new String[5];
     private static final String folderNameOut = "tmp/encrypted/";
     private static final String folderNameOutDec = "tmp/decrypted/";
+    private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // (requestID, send time)
 
 
     // STATIC FUNCTIONS
@@ -142,6 +144,7 @@ public class Main
         /**
          * This function is used by a client to send the information needed by the server to process the file
          * @param out Socket stream connected to the server where the data are written
+         * @param requestId unique ID of the request
          * @param hashPwd SHA-1 hash of the password used to derive the key of the encryption
          * @param pwdLength Length of the clear password
          * @param fileLength Length of the encrypted file
@@ -192,6 +195,7 @@ public class Main
                     sendRequest(out, requestId, hashPwd, pwdLength, fileLength);
                     out.flush();
                     FileManagement.sendFile(inFile, out);
+                    startTimes.put(requestId, System.currentTimeMillis());
                     System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
 /*
@@ -213,7 +217,6 @@ public class Main
 
     private static class ClientReceiver extends Thread
     {
-        private long startTime;
         //TODO: Create a decryptedFile and networkFile for each client
 
         // INSTANCE VARIABLES
@@ -222,7 +225,6 @@ public class Main
         public ClientReceiver(Socket socket)
         {
             super("ClientHandlerThread");
-            this.startTime = System.currentTimeMillis();
             this.socket = socket;
         }
 
@@ -248,7 +250,7 @@ public class Main
 
                     OutputStream outFile = new FileOutputStream(decryptedClient);
                     FileManagement.receiveFile(inSocket, outFile, fileLengthServer);
-                    long deltaTime = System.currentTimeMillis()-this.startTime;
+                    long deltaTime = System.currentTimeMillis()-startTimes.get(requestId);
                     System.out.println("Time observed by the client : "+deltaTime+"ms");
                     inSocket.close();
                     outFile.close();
