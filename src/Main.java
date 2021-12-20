@@ -213,13 +213,18 @@ public class Main
 
     private static class ClientReceiver extends Thread
     {
+        private final int portNumber;
+        private long startTime;
+        //TODO: Create a decryptedFile and networkFile for each client
 
         // INSTANCE VARIABLES
         private Socket socket;
 
         public ClientReceiver(Socket socket)
         {
-            super("ClientReceiverThread");
+            super("ClientHandlerThread");
+            this.portNumber = portNumber;
+            this.startTime = System.currentTimeMillis();
             this.socket = socket;
         }
 
@@ -245,7 +250,8 @@ public class Main
 
                     OutputStream outFile = new FileOutputStream(decryptedClient);
                     FileManagement.receiveFile(inSocket, outFile, fileLengthServer);
-
+                    long deltaTime = System.currentTimeMillis()-this.startTime;
+                    System.out.println("Time observed by the client : "+deltaTime+"ms");
                     inSocket.close();
                     outFile.close();
                 }
