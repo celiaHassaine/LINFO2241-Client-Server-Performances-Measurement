@@ -9,6 +9,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
 import java.util.Random;
 
 
@@ -162,6 +163,7 @@ public class Main
         /**
          * This function is used by a client to send the information needed by the server to process the file
          * @param out Socket stream connected to the server where the data are written
+         * @param requestId unique ID of the request
          * @param hashPwd SHA-1 hash of the password used to derive the key of the encryption
          * @param pwdLength Length of the clear password
          * @param fileLength Length of the encrypted file
