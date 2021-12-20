@@ -28,13 +28,19 @@ public class Main
 {
     // CLIENT PARAMETERS
     private static final int nbRequest = 2;
-    private static final int pwdLength = 4;
 
-    private static final String folderNameIn = "files/Files-5MB/";
-    private static final int nbFilesToEncrypt = 5;
-    private static final String[] passwords = new String[5];
-    private static final String folderNameOut = "tmp/encrypted/";
-    private static final String folderNameOutDec = "tmp/decrypted/";
+    // STATIC VARIABLES AND FUNCTIONS
+    // Streams variables
+    private static InputStream inputStream = null;
+    private static DataInputStream dataInputStream = null;
+    private static OutputStream outputStream;
+    private static DataOutputStream dataOutputStream = null;
+
+    // Variables related to encryption
+    private static final String[] passwords = {"linfo", "coco", "ramin", "love", "merlin"};
+    private static final String srcFolderToEncrypt = "files/Files-5MB/";
+    private static final int nbFilesInSrc = 5;
+    private static final String destFolderEncrypted = "files-encrypted/Files-5MB/";
 
 
     // STATIC FUNCTIONS
@@ -73,46 +79,48 @@ public class Main
     }
 
     /**
-     * This function is used to encrypt files located in @folderNameIn with a random string and
-     * places the random passwords in the global array @passwords.
+     * This function encrypt the nbFiles contained in the folder srcFolder and places the encrypted files
+     * in the folder dstFolder
+     * @param srcFolder source folder of the files to encrypt
+     * @param nbFiles number of files in the source folder
+     * @param dstFolder destination folder to place the encrypted files
      */
-    public static void encryptFiles()
+    public static void encryptFolder(String srcFolder, int nbFiles, String dstFolder)
     {
-        for(int i = 1; i <= nbFilesToEncrypt; i++)
+        for(int i = 1; i<=nbFiles; i++)
         {
             try
             {
-                String password = randomStringGenerator(pwdLength);
-                passwords[i-1] = password;
-
+                File fileToEncrypt = new File(srcFolder + "/file-" + i + ".bin");
+                String password = passwords[i-1];
                 SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
-                //String filenameIn = folderNameIn + "test_file.pdf";
-                String filenameIn = folderNameIn + "file-"+ i + ".bin";
-                File originalFile = new File(filenameIn);
-                //String filenameOut = folderNameOut + "test_file-encrypted-client-id" + requestId + ".pdf";
-                String filenameOut = folderNameOut + "file-" + i + "-encrypted-" + password + ".bin";
-                File encryptedFile = new File(filenameOut);
+                File encryptedFile = new File(dstFolder + "file-" + i + ".bin");
 
-                CryptoUtils.encryptFile(keyGenerated, originalFile, encryptedFile);
-                System.out.println(filenameIn + " of size " + encryptedFile.length() + " encrypted with password: " + password);
-
+                CryptoUtils.encryptFile(keyGenerated, fileToEncrypt, encryptedFile);
+                System.out.println(encryptedFile.getName() + " of size " + encryptedFile.length() + " encrypted with password: " + password);
             }
             catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | IOException | BadPaddingException | InvalidKeyException e)
             {
                 e.printStackTrace();
+                System.err.println("EncryptFolder exception: unable to encrypt files in " + srcFolderToEncrypt);
             }
         }
     }
 
+
     public static void main(String[] args)
     {
-        System.out.println("Client creation");
 
-        // Creating socket to connect to server
-        Socket socket = null;
+        // Encrypted file creation
+        System.out.println("Files in " + srcFolderToEncrypt + "encryption");
+        //encryptFolder(srcFolderToEncrypt, nbFilesInSrc, destFolderEncrypted);
+        System.out.println("Files encrypted in " + destFolderEncrypted);
+
+        // Connection between server and client
+        Socket clientSocket = null;
         try
         {
-            socket = new Socket(ServerMain.getIpAddress(), ServerMain.getPortNumber());
+            clientSocket = new Socket(ServerMain.getIpAddress(), ServerMain.getPortNumber());
         }
         catch (IOException e)
         {
@@ -122,17 +130,29 @@ public class Main
         }
         System.out.println("Socket created");
 
-        // Encrypted file creation
-        System.out.println("Encrypted files creation");
-        encryptFiles();
-        System.out.println("Files encrypted");
+        // Streams creation
+        try
+        {
+            // Stream to write request to socket
+            outputStream = clientSocket.getOutputStream();
+            dataOutputStream = new DataOutputStream(outputStream);
+
+            // Stream to read response from socket
+            inputStream = clientSocket.getInputStream();
+            dataInputStream = new DataInputStream(inputStream);
+        }
+        catch (IOException e)
+        {
+            System.err.println("Could not create required streams");
+            System.exit(-1);
+        }
 
         // Sender thread: send requests to the server
-        ClientSender clientSender = new ClientSender(socket);
+        ClientSender clientSender = new ClientSender();
         clientSender.start();
 
         // Receiver thread: handle response of previous sent requests
-        ClientReceiver clientReceiver = new ClientReceiver(socket);
+        ClientReceiver clientReceiver = new ClientReceiver();
         clientReceiver.start();
     }
 
@@ -155,13 +175,9 @@ public class Main
             out.writeLong(fileLength);
         }
 
-        // INSTANCE VARIABLE
-        private Socket socket;
-
-        public ClientSender(Socket socket)
+        public ClientSender()
         {
             super("ClientSenderThread");
-            this.socket = socket;
         }
 
         @Override
@@ -170,18 +186,10 @@ public class Main
             System.out.println("Run ClientSender");
             try
             {
-                for(int requestId = 1; requestId <= nbRequest; requestId++)
+                for(int requestId = 0; requestId < nbRequest; requestId++)
                 {
-                    String password = passwords[requestId-1];
-                    //String filenameOut = folderNameOut + "test_file-encrypted-client-id" + requestId + ".pdf";
-                    String filenameOut = folderNameOut + "file-" + requestId + "-encrypted-" + password + ".bin";
-                    File encryptedFile = new File(filenameOut);
-
-                    // For any I/O operations, a stream is needed where the data are read from or written to. Depending on
-                    // where the data must be sent to or received from, different kind of stream are used.
-                    OutputStream outSocket = socket.getOutputStream();
-                    DataOutputStream out = new DataOutputStream(outSocket);
-
+                    String password = passwords[requestId];
+                    File encryptedFile = new File(destFolderEncrypted + "file-" + (1+ requestId % nbFilesInSrc) + ".bin");
                     InputStream inFile = new FileInputStream(encryptedFile);
 
                     // SEND THE PROCESSING INFORMATION AND FILE
@@ -189,17 +197,12 @@ public class Main
                     int pwdLength = password.length();
                     long fileLength = encryptedFile.length();
 
-                    sendRequest(out, requestId, hashPwd, pwdLength, fileLength);
-                    out.flush();
-                    FileManagement.sendFile(inFile, out);
+                    sendRequest(dataOutputStream, requestId, hashPwd, pwdLength, fileLength);
+                    dataOutputStream.flush();
+                    FileManagement.sendFile(inFile, dataOutputStream);
                     System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
-/*
-                    // ??? SHOULD WE ?
-                    outSocket.close();
-                    out.close();
                     inFile.close();
-*/
                 }
             }
             catch (NoSuchAlgorithmException | IOException e)
@@ -213,47 +216,29 @@ public class Main
 
     private static class ClientReceiver extends Thread
     {
-        private final int portNumber;
-        private long startTime;
-        //TODO: Create a decryptedFile and networkFile for each client
-
-        // INSTANCE VARIABLES
-        private Socket socket;
-
-        public ClientReceiver(Socket socket)
+        public ClientReceiver()
         {
             super("ClientHandlerThread");
-            this.portNumber = portNumber;
-            this.startTime = System.currentTimeMillis();
-            this.socket = socket;
         }
 
         @Override
         public void run()
         {
             System.out.println("Run ClientReceiver");
-
             try
             {
-                for(int iRequest = 0; iRequest < nbRequest; iRequest++)
+                int nbResponseReceived = 0;
+                while(true) //nbResponseReceived < nbRequest)
                 {
-                    DataInputStream inSocket = new DataInputStream(socket.getInputStream());
-
-                    int requestId = inSocket.readInt();
-                    long fileLengthServer = inSocket.readLong();
+                    int requestId = dataInputStream.readInt();
+                    long fileLengthServer = dataInputStream.readLong();
                     System.out.println("Client receives : (requestId, fileLength) = (" + requestId + ", " + fileLengthServer + ")");
-
-                    // String filenameOut = folderNameOutDec + "test_file-decrypted-client-id" + requestId + ".pdf";
-                    String filenameOut = folderNameOutDec + "file-" + requestId + "-decrypted-client" + ".bin";
-                    File decryptedClient = new File(filenameOut);
-
-
+                    File decryptedClient = new File("tmp/file-" + requestId + "-decrypted-client" + ".bin");
                     OutputStream outFile = new FileOutputStream(decryptedClient);
-                    FileManagement.receiveFile(inSocket, outFile, fileLengthServer);
-                    long deltaTime = System.currentTimeMillis()-this.startTime;
-                    System.out.println("Time observed by the client : "+deltaTime+"ms");
-                    inSocket.close();
+
+                    FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
                     outFile.close();
+                    nbResponseReceived++;
                 }
             }
             catch (IOException e)
