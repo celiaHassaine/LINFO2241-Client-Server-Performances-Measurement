@@ -60,7 +60,7 @@ public class Main {
 
         boolean creating = true;
         int portNumber = 3333;
-        int nbThreads = 1;
+        int nbThreads = 10;
         int iThread = 0;
 
         while(creating && iThread < nbThreads)
@@ -77,13 +77,15 @@ public class Main {
 
     private static class ClientThread extends Thread
     {
-        private int portNumber;
+        private final int portNumber;
+        private long startTime;
         //TODO: Create a decryptedFile and networkFile for each client
 
         public ClientThread(int portNumber)
         {
             super("ClientHandlerThread");
             this.portNumber = portNumber;
+            this.startTime = System.currentTimeMillis();
         }
 
         @Override
@@ -100,12 +102,10 @@ public class Main {
 
                 // This is an example to help you create your request
                 CryptoUtils.encryptFile(keyGenerated, inputFile, encryptedFile);
-                System.out.println("Encrypted file length: " + encryptedFile.length());
 
 
                 // Creating socket to connect to server (in this example it runs on the localhost on port 3333)
                 Socket socket = new Socket("localhost", this.portNumber);
-                System.out.println("Socket created");
 
 
                 // For any I/O operations, a stream is needed where the data are read from or written to. Depending on
@@ -125,6 +125,7 @@ public class Main {
                 out.flush();
 
                 FileManagement.sendFile(inFile, out);
+                System.out.println("Encrypted file and request sent");
                 /*
                 int readCount;
                 byte[] buffer = new byte[64];
@@ -136,8 +137,8 @@ public class Main {
                 // GET THE RESPONSE FROM THE SERVER
                 OutputStream outFile = new FileOutputStream(decryptedClient);
                 long fileLengthServer = inSocket.readLong();
-                System.out.println("Length from the server: "+ fileLengthServer);
                 FileManagement.receiveFile(inSocket, outFile, fileLengthServer);
+                System.out.println("Response from the server received");
 
                 /*
                 int readFromSocket = 0;
@@ -148,7 +149,8 @@ public class Main {
                     readFromSocket += byteRead;
                     outFile.write(readBuffer, 0, byteRead);
                 }*/
-
+                long deltaTime = System.currentTimeMillis()-this.startTime;
+                System.out.println("Time observed by the client : "+deltaTime+"ms");
                 out.close();
                 outSocket.close();
                 outFile.close();
