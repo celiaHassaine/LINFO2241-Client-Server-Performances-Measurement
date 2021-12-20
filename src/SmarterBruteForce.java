@@ -73,7 +73,7 @@ public class SmarterBruteForce extends BruteForce
         String password = "starwars";                       // starwars is in the 10k-most-common file
         byte[] hashPwd = hashSHA1(password);
 
-        String filename = "files/10k-most-common_filered.txt";
+        String filename = "files/10k-most-common_filtered.txt";
         Map<String, String> dic = null;
         dic = createDictionary(filename);
 

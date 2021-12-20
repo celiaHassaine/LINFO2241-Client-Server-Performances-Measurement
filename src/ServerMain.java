@@ -18,8 +18,7 @@ public class ServerMain
     private static final String serverIpAddress = "localhost";
     private static final int portNumber = 3333;
     private static final boolean isSmart = true;
-    private static final String folderNameIn = "files/";
-    private static final String folderNameOut = "tmp/";
+    private static final String folderNameOut = "tmp/decrypted/";
 
     // STATIC VARIABLES AND FUNCTIONS
     private static Map<String, String> dictionary;
@@ -47,9 +46,9 @@ public class ServerMain
     public static void main(String[] args)
     {
         // Dictionary creation
-        String filename = "files/10k-most-common_filered.txt";
         try
         {
+            String filename = "files/10k-most-common_filtered.txt";
             dictionary = SmarterBruteForce.createDictionary(filename);
         }
         catch (DictionaryCreationException e)
@@ -60,20 +59,22 @@ public class ServerMain
         }
 
         // Initialization the connection of the server
-        ServerSocket serverSocket;
         try
-        // TODO: add second arg backlog to record maximum number of incoming traffic
         {
-            serverSocket = new ServerSocket(portNumber);
+            // TODO: TASK3: adjust backlog for measurements
+            int backlog = 10;
+            // requested maximum length of the queue of incoming connections
+            // if a connection indication arrives when the queue is full, the connection is refused.
+            ServerSocket serverSocket = new ServerSocket(portNumber, backlog);
 
-            while (listening) // while listening and maximal number of queuing capacity of the OS's queue for incoming TCP
-            // TODO: check if less than maximal number of queuing capacity of the OS's queue for incoming TCP
+            while (listening) // while listening
             {
                 System.out.println("Waiting connection");
-                // Accept a connection
+                // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
                 Socket requestSocket = serverSocket.accept();
                 System.out.println("Connection from: " + requestSocket);
 
+                // TODO: TASK1: use thread pool instead to be more efficient
                 // create a thread for each request;
                 RequestHandler requestHandler = new RequestHandler(requestSocket, isSmart);
                 requestHandler.start();
@@ -133,18 +134,15 @@ public class ServerMain
                 System.out.println("Server receives : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
                 // Stream to write the file to decrypt
-                File networkFile = new File(folderNameOut + "temp-server-id" + requestId + ".pdf");
+                // File networkFile = new File(folderNameOut + "temp-server-id" + requestId + ".pdf");
+                File networkFile = new File(folderNameOut + "temp-server-id" + requestId + ".bin");
                 OutputStream outFile = new FileOutputStream(networkFile);
                 FileManagement.receiveFile(inputStream, outFile, fileLength);
 
                 // BRUTEFORCE:
                 // Password is determined by using a bruteforce method implemented in the classes: BruteForce, DumbBruteForce, SmarterBruteForce
                 System.out.println("-- Starting bruteforce -- ");
-                BruteForce BF;
-                if(this.isSmart)
-                    BF = new SmarterBruteForce(pwdLength, hashPwd, dictionary);
-                else
-                    BF = new DumbBruteForce(pwdLength, hashPwd);
+                BruteForce BF = isSmart ? new SmarterBruteForce(pwdLength, hashPwd, dictionary): new DumbBruteForce(pwdLength, hashPwd);
 
                 String pwdFound;
                 try
@@ -162,7 +160,10 @@ public class ServerMain
 
 
                 // Send the decryptedFile
-                File decryptedFile = new File( folderNameOut + "test_file-decrypted-server-id" + requestId +".pdf");
+                //String filenameOut = folderNameOut + "test_file-decrypted-server-id" + requestId +".pdf";
+                String filenameOut = folderNameOut + "file-" + requestId + "-decrypted-server-" + pwdFound + ".bin";
+                File decryptedFile = new File(filenameOut);
+
                 SecretKey serverKey = CryptoUtils.getKeyFromPassword(pwdFound);
                 CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
                 InputStream inDecrypted = new FileInputStream(decryptedFile);
@@ -176,8 +177,10 @@ public class ServerMain
 
                 inputStream.close();
                 dataInputStream.close();
-                inDecrypted.close();
                 outFile.close();
+                inDecrypted.close();
+                // outSocket.close(); ????
+
 
             }
             catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e)
@@ -190,5 +193,5 @@ public class ServerMain
 
     public static int getPortNumber() { return portNumber; }
 
-    public static String getServerIpAddress() { return serverIpAddress; }
+    public static String getIpAddress() { return serverIpAddress; }
 }
