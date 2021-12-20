@@ -27,7 +27,7 @@ import java.util.Random;
 public class Main
 {
     // CLIENT PARAMETERS
-    private static final int nbRequest = 1;
+    private static final int nbRequest = 2;
     private static final int pwdLength = 4;
 
     private static final String folderNameIn = "files/Files-5MB/";
