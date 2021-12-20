@@ -66,20 +66,20 @@ public class ServerMain
             // requested maximum length of the queue of incoming connections
             // if a connection indication arrives when the queue is full, the connection is refused.
             ServerSocket serverSocket = new ServerSocket(portNumber, backlog);
-
-            while (listening) // while listening
+            while (true)
             {
                 System.out.println("Waiting connection");
-                // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
                 Socket requestSocket = serverSocket.accept();
+                // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
+                //Socket requestSocket = serverSocket.accept();
                 System.out.println("Connection from: " + requestSocket);
-
                 // TODO: TASK1: use thread pool instead to be more efficient
                 // create a thread for each request;
                 RequestHandler requestHandler = new RequestHandler(requestSocket, isSmart);
-                requestHandler.start();
+                requestHandler.run(); //.start()
             }
-            serverSocket.close();
+
+            //serverSocket.close();
         }
         catch (IOException e)
         {
@@ -89,7 +89,7 @@ public class ServerMain
 
     }
 
-    private static class RequestHandler extends Thread
+    private static class RequestHandler //extends Thread
     {
         // STATIC FUNCTION
         /**
@@ -111,12 +111,12 @@ public class ServerMain
 
         public RequestHandler(Socket requestSocket, boolean isSmart)
         {
-            super("RequestHandlerThread");
+            //super("RequestHandlerThread");
             this.requestSocket = requestSocket;
             this.isSmart = isSmart;
         }
 
-        @Override
+        //@Override
         public void run()
         {
             try
@@ -175,8 +175,7 @@ public class ServerMain
                 FileManagement.sendFile(inDecrypted, outSocket);
                 System.out.println("Server responses to request: " + requestId);
 
-                inputStream.close();
-                dataInputStream.close();
+                //dataInputStream.close();
                 outFile.close();
                 inDecrypted.close();
                 // outSocket.close(); ????

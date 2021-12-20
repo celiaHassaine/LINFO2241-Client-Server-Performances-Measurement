@@ -129,6 +129,7 @@ public class Main
         encryptFiles();
         System.out.println("Files encrypted");
 
+
         // Sender thread: send requests to the server
         ClientSender clientSender = new ClientSender(socket);
         clientSender.start();
@@ -158,6 +159,24 @@ public class Main
             out.writeLong(fileLength);
         }
 
+        /**
+         * Returns a float number following a normal distribution with mean and std
+         * @param mean mean of the normal distribution
+         * @param std standard deviation of the normal
+         */
+        public static double gaussian(double mean, double std) {
+            Random rnd = new Random();
+
+            return (rnd.nextGaussian()*std) + mean;
+        }
+
+        /**
+         * Returns current time in seconds
+         */
+        public static double getCurrentTime() {
+            return System.currentTimeMillis()/1000.0;
+        }
+
         // INSTANCE VARIABLE
         private Socket socket;
 
@@ -171,39 +190,52 @@ public class Main
         public void run()
         {
             System.out.println("Run ClientSender");
+            // For any I/O operations, a stream is needed where the data are read from or written to. Depending on
+            // where the data must be sent to or received from, different kind of stream are used.
+            OutputStream outSocket = null;
+            try {
+                outSocket = socket.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             try
             {
-                for(int requestId = 1; requestId <= nbRequest; requestId++)
+                int requestId = 1;
+                double inter_request_time = gaussian(2.0, 1.0);  // Mean of 2 seconds and std of 1 second
+                double start_time = getCurrentTime(); // Start time in seconds
+                double deltaTime;
+                while (true)
                 {
-                    String password = passwords[requestId-1];
-                    //String filenameOut = folderNameOut + "test_file-encrypted-client-id" + requestId + ".pdf";
-                    String filenameOut = folderNameOut + "file-" + requestId + "-encrypted-" + password + ".bin";
-                    File encryptedFile = new File(filenameOut);
+                    deltaTime = getCurrentTime() - start_time;
+                    if (deltaTime >= inter_request_time) {
+                        String password = passwords[requestId-1];
+                        //String filenameOut = folderNameOut + "test_file-encrypted-client-id" + requestId + ".pdf";
+                        String filenameOut = folderNameOut + "file-" + requestId + "-encrypted-" + password + ".bin";
+                        File encryptedFile = new File(filenameOut);
 
-                    // For any I/O operations, a stream is needed where the data are read from or written to. Depending on
-                    // where the data must be sent to or received from, different kind of stream are used.
-                    OutputStream outSocket = socket.getOutputStream();
-                    DataOutputStream out = new DataOutputStream(outSocket);
+                        // SEND THE PROCESSING INFORMATION AND FILE
+                        byte[] hashPwd = hashSHA1(password);
+                        int pwdLength = password.length();
+                        long fileLength = encryptedFile.length();
 
-                    InputStream inFile = new FileInputStream(encryptedFile);
+                        DataOutputStream out = new DataOutputStream(outSocket);
+                        InputStream inFile = new FileInputStream(encryptedFile);
+                        sendRequest(out, requestId, hashPwd, pwdLength, fileLength);
+                        out.flush();
+                        FileManagement.sendFile(inFile, out);
+                        startTimes.put(requestId, System.currentTimeMillis());
+                        System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
-                    // SEND THE PROCESSING INFORMATION AND FILE
-                    byte[] hashPwd = hashSHA1(password);
-                    int pwdLength = password.length();
-                    long fileLength = encryptedFile.length();
+                        requestId++;
+                        inter_request_time = gaussian(2, 1);
+                        start_time = getCurrentTime();
 
-                    sendRequest(out, requestId, hashPwd, pwdLength, fileLength);
-                    out.flush();
-                    FileManagement.sendFile(inFile, out);
-                    startTimes.put(requestId, System.currentTimeMillis());
-                    System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
-
-/*
-                    // ??? SHOULD WE ?
-                    outSocket.close();
-                    out.close();
-                    inFile.close();
-*/
+                        // ??? SHOULD WE ?
+                        /*outSocket.close();
+                        out.close();
+                        inFile.close();*/
+                    }
                 }
             }
             catch (NoSuchAlgorithmException | IOException e)
@@ -252,8 +284,8 @@ public class Main
                     FileManagement.receiveFile(inSocket, outFile, fileLengthServer);
                     long deltaTime = System.currentTimeMillis()-startTimes.get(requestId);
                     System.out.println("Time observed by the client : "+deltaTime+"ms");
-                    inSocket.close();
-                    outFile.close();
+                    //inSocket.close();
+                    //outFile.close();
                 }
             }
             catch (IOException e)
