@@ -13,18 +13,10 @@ import java.util.HashMap;
 import java.util.Random;
 
 
-//TODO: TASK 2
-//TODO: implement a small client ap sending request at random times (choose some distribution) : Corentin
-//TODO: make some measurements with different request rate, difficulities : Corentin
-//TODO: compare with the 2 implementations of the bruteforce: Merlin
-
-//TODO: TASK 3
-
-
 public class Main
 {
     // CLIENT PARAMETERS
-    private static final int nbRequest = 3;
+    private static double rate = 2;
 
     // STATIC VARIABLES AND FUNCTIONS
     // Streams variables
@@ -34,13 +26,8 @@ public class Main
     private static DataOutputStream dataOutputStream = null;
     private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // (requestID, send time)
 
-    // Variables related to encryption
-    private static final String[] passwords = {"abc", "abcd", "abcde", "abcdef", "abcdefg"};
-    private static final String srcFolderToEncrypt = "files/Files-5MB/";
-    private static final String destFolderEncrypted = "files-encrypted/Files-5MB/";
-
-    private static final int foldIdx = 0;
     private static final int maxRequestNum = 255;
+    private static final int foldIdx = 0;
     private static final Encryptor.Folder foldToSend = Encryptor.folders[foldIdx];
 
 
@@ -122,24 +109,13 @@ public class Main
             out.writeLong(fileLength);
         }
 
-
-        /**
-         * Returns a random double sample following a normal distribution
-         * @param mean mean of the normal distribution
-         * @param std standard deviation of the normal
-         */
-        public static double gaussian(double mean, double std) {
-            Random rnd = new Random();
-            return (rnd.nextGaussian()*std) + mean;
-        }
-
         /**
          * Returns a random double sample following a normal exponential
-         * @param mean mean of the exponential distribution
+         * @param rate rate of the exponential distribution (number of events per second)
          */
-        public static double nextExp(double mean) {
+        public static double nextExp(double rate) {
             Random rnd = new Random();
-            return -mean*Math.log(rnd.nextDouble());
+            return -(1/rate)*Math.log(rnd.nextDouble());
         }
 
         /**
@@ -162,7 +138,7 @@ public class Main
             {
                 int fileIdx = 1;
                 int requestId = 1;
-                double inter_request_time = nextExp(0.5);  // Mean of 2 seconds
+                double inter_request_time = nextExp(rate);  // Mean of 2 seconds
                 double start_time = getCurrentTime(); // Start time in seconds
                 double deltaTime;
                 while (true)
@@ -184,7 +160,7 @@ public class Main
                         startTimes.put(requestId, System.currentTimeMillis());
                         System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
-                        inter_request_time = nextExp(0.5);
+                        inter_request_time = nextExp(rate);
                         start_time = getCurrentTime();
 
                         requestId = (requestId % maxRequestNum) + 1;

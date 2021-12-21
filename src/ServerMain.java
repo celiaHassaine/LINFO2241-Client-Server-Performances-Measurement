@@ -21,6 +21,7 @@ public class ServerMain
     private static final String serverIpAddress = "localhost";
     private static final int portNumber = 3333;
     private static final boolean isSmart = true;
+    private static final int N_THREADS = 6;
 
     // STATIC VARIABLES AND FUNCTIONS
     // Streams variables
@@ -58,7 +59,7 @@ public class ServerMain
     public static void main(String[] args)
     {
         // Dictionary creation
-        ExecutorService threadPool = Executors.newFixedThreadPool(6);
+        ExecutorService threadPool = Executors.newFixedThreadPool(N_THREADS);
         try
         {
             String filename = "files/10k-most-common_filtered.txt";
