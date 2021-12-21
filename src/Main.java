@@ -9,6 +9,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
 import java.util.Random;
 
 
@@ -33,8 +34,9 @@ public class Main
     // Streams variables
     private static InputStream inputStream = null;
     private static DataInputStream dataInputStream = null;
-    private static OutputStream outputStream;
+    private static OutputStream outputStream = null;
     private static DataOutputStream dataOutputStream = null;
+    private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // (requestID, send time)
 
     // Variables related to encryption
     //private static final String[] passwords = {"linfo", "coco", "ramin", "love", "merlin"};
@@ -206,15 +208,6 @@ public class Main
         public void run()
         {
             System.out.println("Run ClientSender");
-            // For any I/O operations, a stream is needed where the data are read from or written to. Depending on
-            // where the data must be sent to or received from, different kind of stream are used.
-            OutputStream outSocket = null;
-            try {
-                outSocket = socket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
             try
             {
                 int requestId = 1;
@@ -270,18 +263,16 @@ public class Main
             System.out.println("Run ClientReceiver");
             try
             {
-                int nbResponseReceived = 0;
-                while(true) //nbResponseReceived < nbRequest)
+                while(true)
                 {
                     int requestId = dataInputStream.readInt();
                     long fileLengthServer = dataInputStream.readLong();
                     System.out.println("Client receives : (requestId, fileLength) = (" + requestId + ", " + fileLengthServer + ")");
                     File decryptedClient = new File("tmp/file-" + requestId + "-decrypted-client" + ".bin");
                     OutputStream outFile = new FileOutputStream(decryptedClient);
-                    FileManagement.receiveFile(inSocket, outFile, fileLengthServer);
+                    FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
                     long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
-                    System.out.println("Time observed by the client : " + deltaTime + "ms");
-                    //inSocket.close();
+                    System.out.println("Time observed by the client "+requestId+": " + deltaTime + "ms");
                     //outFile.close();
                 }
 

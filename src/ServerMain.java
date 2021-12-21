@@ -140,10 +140,10 @@ public class ServerMain
         }
 
         // INSTANCE VARIABLES
-        private Request request;
-        private File networkFile;
-        private OutputStream outFile;
-        private boolean isSmart;
+        private final Request request;
+        private final File networkFile;
+        private final OutputStream outFile;
+        private final boolean isSmart;
 
         public RequestHandler(Request request,File networkFile, OutputStream outFile, boolean isSmart)
         {
@@ -176,6 +176,8 @@ public class ServerMain
                 catch (PasswordNotFoundException e)
                 {
                     e.printStackTrace();
+                    e.details();
+                    return;
                 }
                 System.out.println("PASSWORD FOUND: " + pwdFound);
                 System.out.println("-- End bruteforce -- ");
