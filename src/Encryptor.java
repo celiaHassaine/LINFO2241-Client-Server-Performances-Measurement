@@ -44,7 +44,7 @@ public class Encryptor {
                 Random rnd = new Random();
                 if (rnd.nextDouble() > 0.5)
                 {
-                    this.passwords[i] = "linf";  // Word from the dictionary
+                    this.passwords[i] = "linfoo";  // Word from the dictionary
                 }
                 else
                 {

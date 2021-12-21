@@ -206,7 +206,7 @@ public class Main
     {
         public ClientReceiver()
         {
-            super("ClientHandlerThread");
+            super("ClientReceiverThread");
         }
 
         @Override
@@ -219,8 +219,8 @@ public class Main
                 {
                     int requestId = dataInputStream.readInt();
                     long fileLengthServer = dataInputStream.readLong();
-                    System.out.println("Client receives : (requestId, fileLength) = (" + requestId % foldToSend.nbFiles + ", " + fileLengthServer + ")");
-                    File decryptedClient = new File("tmp/file-" + requestId + "-decrypted-client" + ".bin");
+                    System.out.println("Client receives : (requestId, fileLength) = (" + requestId + ", " + fileLengthServer + ")");
+                    File decryptedClient = new File("tmp/file-" + requestId % foldToSend.nbFiles + "-decrypted-client" + ".bin");
                     OutputStream outFile = new FileOutputStream(decryptedClient);
                     FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
                     long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);

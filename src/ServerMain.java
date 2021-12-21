@@ -10,6 +10,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 
@@ -56,6 +58,7 @@ public class ServerMain
     public static void main(String[] args)
     {
         // Dictionary creation
+        ExecutorService threadPool = Executors.newFixedThreadPool(6);
         try
         {
             String filename = "files/10k-most-common_filtered.txt";
@@ -130,9 +133,9 @@ public class ServerMain
                 finally {
                     lockInput.unlock();
                 }
+                RequestHandler req = new RequestHandler(request, networkFile, isSmart); // TODO: queue ? See coco doesn't like that
+                threadPool.execute(req);
                 outFile.close();
-                RequestHandler requestHandler = new RequestHandler(request, networkFile, isSmart); // TODO: queue ? See coco doesn't like that
-                requestHandler.start();
             }
         }
         catch ( IOException e)
@@ -141,7 +144,7 @@ public class ServerMain
         }
     }
 
-    private static class RequestHandler extends Thread
+    private static class RequestHandler implements Runnable
     {
         // STATIC FUNCTION
         /**
@@ -164,7 +167,6 @@ public class ServerMain
 
         public RequestHandler(Request request,File networkFile, boolean isSmart)
         {
-            super("RequestHandlerThread");
             this.request = request;
             this.networkFile = networkFile;
             this.isSmart = isSmart;
