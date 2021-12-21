@@ -176,8 +176,6 @@ public class ServerMain
                 catch (PasswordNotFoundException e)
                 {
                     e.printStackTrace();
-                    e.details();
-                    return;
                 }
                 System.out.println("PASSWORD FOUND: " + pwdFound);
                 System.out.println("-- End bruteforce -- ");
