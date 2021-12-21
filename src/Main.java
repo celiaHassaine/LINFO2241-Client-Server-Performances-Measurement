@@ -42,8 +42,9 @@ public class Main
     //private static final String[] passwords = {"linfo", "coco", "ramin", "love", "merlin"};
     private static final String[] passwords = {"abc", "abcd", "abcde", "abcdef", "abcdefg"};
     private static final String srcFolderToEncrypt = "files/Files-5MB/";
-    private static final int nbFilesInSrc = 5;
     private static final String destFolderEncrypted = "files-encrypted/Files-5MB/";
+
+    private static final Encryptor.Folder foldToSend = Encryptor.folders[0];
 
 
     // STATIC FUNCTIONS
@@ -58,28 +59,6 @@ public class Main
             return md.digest(data.getBytes());
     }
 
-    /**
-     * This function is used to generate random password in order to encrypt files.
-     * @param length Length of the string to generate
-     * @return A random string of length specified as argument
-     */
-    public static String randomStringGenerator(int length)
-    {
-        StringBuilder seedChars= new StringBuilder();
-        // TODO: change the for loop by : for(char c = ' '; c <= '~' && !found; c++) to handle all characters https://www.javatpoint.com/java-ascii-table
-        for(char c = 'a'; c <= 'z'; c++)
-        {
-            seedChars.append(c);
-        }
-
-        StringBuilder sb = new StringBuilder();
-        Random rand = new Random();
-        for(int i = 0; i< length; i++)
-        {
-            sb.append(seedChars.charAt(rand.nextInt(seedChars.length())));
-        }
-        return sb.toString();
-    }
 
     /**
      * This function encrypt the nbFiles contained in the folder srcFolder and places the encrypted files
@@ -113,12 +92,7 @@ public class Main
 
     public static void main(String[] args)
     {
-
-        // Encrypted file creation
-        System.out.println("Files in " + srcFolderToEncrypt + "encryption");
-        encryptFolder(srcFolderToEncrypt, nbFilesInSrc, destFolderEncrypted);
-        System.out.println("Files encrypted in " + destFolderEncrypted);
-
+        Encryptor.main(new String[0]);
         // Connection between server and client
         Socket clientSocket = null;
         try
@@ -182,7 +156,7 @@ public class Main
 
 
         /**
-         * Returns a float number following a normal distribution with mean and std
+         * Returns a random double sample following a normal distribution
          * @param mean mean of the normal distribution
          * @param std standard deviation of the normal
          */
@@ -192,6 +166,10 @@ public class Main
             return (rnd.nextGaussian()*std) + mean;
         }
 
+        /**
+         * Returns a random double sample following a normal exponential
+         * @param mean mean of the exponential distribution
+         */
         public static double nextExp(double mean) {
             Random rnd = new Random();
             return -mean*Math.log(rnd.nextDouble());
@@ -216,18 +194,19 @@ public class Main
             try
             {
                 int requestId = 1;
-                double inter_request_time = nextExp(2.0);  // Mean of 2 seconds and std of 1 second
+                double inter_request_time = nextExp(2.0);  // Mean of 2 seconds
                 double start_time = getCurrentTime(); // Start time in seconds
                 double deltaTime;
                 while (true)
                 {
                     deltaTime = getCurrentTime() - start_time;
                     if (deltaTime >= inter_request_time) {
-                        String password = passwords[requestId-1];
-                        File encryptedFile = new File(destFolderEncrypted + "file-" + requestId + ".bin");
+                        String password = foldToSend.passwords[requestId-1];
+                        File encryptedFile = new File(foldToSend.getPath("files-encrypted", requestId));
                         InputStream inFile = new FileInputStream(encryptedFile);
 
                         // SEND THE PROCESSING INFORMATION AND FILE
+                        System.out.println(password);
                         byte[] hashPwd = hashSHA1(password);
                         int pwdLength = password.length();
                         long fileLength = encryptedFile.length();
@@ -238,10 +217,10 @@ public class Main
                         startTimes.put(requestId, System.currentTimeMillis());
                         System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
-                        requestId++;
                         inter_request_time = nextExp(2);
                         start_time = getCurrentTime();
 
+                        requestId = (requestId%foldToSend.nbFiles) + 1;
                         inFile.close();
                     }
                 }
