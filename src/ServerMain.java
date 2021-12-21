@@ -19,6 +19,8 @@ public class ServerMain
     private static final int portNumber = 3333;
     private static final boolean isSmart = true;
     private static final String folderNameOut = "tmp/decrypted/";
+    private static DataInputStream dataInputStream;
+    private static InputStream inputStream;
 
     // STATIC VARIABLES AND FUNCTIONS
     private static Map<String, String> dictionary;
@@ -66,18 +68,18 @@ public class ServerMain
             // requested maximum length of the queue of incoming connections
             // if a connection indication arrives when the queue is full, the connection is refused.
             ServerSocket serverSocket = new ServerSocket(portNumber, backlog);
-            while (true)
-            {
-                System.out.println("Waiting connection");
-                Socket requestSocket = serverSocket.accept();
-                // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
-                //Socket requestSocket = serverSocket.accept();
-                System.out.println("Connection from: " + requestSocket);
-                // TODO: TASK1: use thread pool instead to be more efficient
-                // create a thread for each request;
-                RequestHandler requestHandler = new RequestHandler(requestSocket, isSmart);
-                requestHandler.run(); //.start()
-            }
+            System.out.println("Waiting connection");
+            Socket requestSocket = serverSocket.accept();
+
+            // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
+            //Socket requestSocket = serverSocket.accept();
+            System.out.println("Connection from: " + requestSocket);
+            // TODO: TASK1: use thread pool instead to be more efficient
+            // create a thread for each request;
+            inputStream = requestSocket.getInputStream();
+            dataInputStream = new DataInputStream(inputStream);
+            RequestHandler requestHandler = new RequestHandler(requestSocket, isSmart);
+            requestHandler.run(); //.start()
 
             //serverSocket.close();
         }
@@ -119,72 +121,64 @@ public class ServerMain
         //@Override
         public void run()
         {
-            try
-            {
-                // Stream to read request from socket
-                InputStream inputStream = requestSocket.getInputStream();
-                DataInputStream dataInputStream = new DataInputStream(inputStream);
+            while (true) {
+                try {
+                    // Stream to read request from socket
+                    System.out.println("Waiting request");
+                    Request request = readRequest(dataInputStream);
+                    int requestId = request.getRequestId();
+                    byte[] hashPwd = request.getHashPassword();
+                    int pwdLength = request.getLengthPwd();
+                    long fileLength = request.getLengthFile();
 
-                Request request = readRequest(dataInputStream);
-                int requestId = request.getRequestId();
-                byte[] hashPwd = request.getHashPassword();
-                int pwdLength = request.getLengthPwd();
-                long fileLength = request.getLengthFile();
+                    System.out.println("Server receives : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
-                System.out.println("Server receives : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
+                    // Stream to write the file to decrypt
+                    // File networkFile = new File(folderNameOut + "temp-server-id" + requestId + ".pdf");
+                    File networkFile = new File(folderNameOut + "temp-server-id" + requestId + ".bin");
+                    OutputStream outFile = new FileOutputStream(networkFile);
+                    FileManagement.receiveFile(inputStream, outFile, fileLength);
 
-                // Stream to write the file to decrypt
-                // File networkFile = new File(folderNameOut + "temp-server-id" + requestId + ".pdf");
-                File networkFile = new File(folderNameOut + "temp-server-id" + requestId + ".bin");
-                OutputStream outFile = new FileOutputStream(networkFile);
-                FileManagement.receiveFile(inputStream, outFile, fileLength);
+                    // BRUTEFORCE:
+                    // Password is determined by using a bruteforce method implemented in the classes: BruteForce, DumbBruteForce, SmarterBruteForce
+                    System.out.println("-- Starting bruteforce -- ");
+                    BruteForce BF = isSmart ? new SmarterBruteForce(pwdLength, hashPwd, dictionary) : new DumbBruteForce(pwdLength, hashPwd);
 
-                // BRUTEFORCE:
-                // Password is determined by using a bruteforce method implemented in the classes: BruteForce, DumbBruteForce, SmarterBruteForce
-                System.out.println("-- Starting bruteforce -- ");
-                BruteForce BF = isSmart ? new SmarterBruteForce(pwdLength, hashPwd, dictionary): new DumbBruteForce(pwdLength, hashPwd);
+                    String pwdFound;
+                    try {
+                        pwdFound = BF.getPassword();
+                    } catch (PasswordNotFoundException e) {
+                        e.printStackTrace();
+                        e.details();
+                        return;
+                    }
+                    System.out.println("PASSWORD FOUND: " + pwdFound);
+                    System.out.println("-- End bruteforce -- ");
 
-                String pwdFound;
-                try
-                {
-                    pwdFound = BF.getPassword();
-                }
-                catch (PasswordNotFoundException e)
-                {
+
+                    // Send the decryptedFile
+                    //String filenameOut = folderNameOut + "test_file-decrypted-server-id" + requestId +".pdf";
+                    String filenameOut = folderNameOut + "file-" + requestId + "-decrypted-server-" + pwdFound + ".bin";
+                    File decryptedFile = new File(filenameOut);
+                    SecretKey serverKey = CryptoUtils.getKeyFromPassword(pwdFound);
+                    CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
+                    InputStream inDecrypted = new FileInputStream(decryptedFile);
+
+                    // Stream to write response to socket
+                    DataOutputStream outSocket = new DataOutputStream(requestSocket.getOutputStream());
+                    sendResponse(outSocket, requestId, decryptedFile.length());
+                    outSocket.flush();
+                    FileManagement.sendFile(inDecrypted, outSocket);
+
+                    //dataInputStream.close();
+                    outFile.close();
+                    inDecrypted.close();
+                    // outSocket.close(); ????
+
+
+                } catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e) {
                     e.printStackTrace();
-                    e.details();
-                    return;
                 }
-                System.out.println("PASSWORD FOUND: " + pwdFound);
-                System.out.println("-- End bruteforce -- ");
-
-
-                // Send the decryptedFile
-                //String filenameOut = folderNameOut + "test_file-decrypted-server-id" + requestId +".pdf";
-                String filenameOut = folderNameOut + "file-" + requestId + "-decrypted-server-" + pwdFound + ".bin";
-                File decryptedFile = new File(filenameOut);
-
-                SecretKey serverKey = CryptoUtils.getKeyFromPassword(pwdFound);
-                CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
-                InputStream inDecrypted = new FileInputStream(decryptedFile);
-
-                // Stream to write response to socket
-                DataOutputStream outSocket = new DataOutputStream(requestSocket.getOutputStream());
-                sendResponse(outSocket, requestId, decryptedFile.length());
-                outSocket.flush();
-                FileManagement.sendFile(inDecrypted, outSocket);
-                System.out.println("Server responses to request: " + requestId);
-
-                //dataInputStream.close();
-                outFile.close();
-                inDecrypted.close();
-                // outSocket.close(); ????
-
-
-            }
-            catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e)
-            {
-                e.printStackTrace();
             }
         }
     }

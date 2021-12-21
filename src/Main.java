@@ -223,9 +223,7 @@ public class Main
                         InputStream inFile = new FileInputStream(encryptedFile);
                         sendRequest(out, requestId, hashPwd, pwdLength, fileLength);
                         out.flush();
-                        System.out.println("Before sending file");
                         FileManagement.sendFile(inFile, out);
-                        System.out.println("After sending file");
                         startTimes.put(requestId, System.currentTimeMillis());
                         System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
