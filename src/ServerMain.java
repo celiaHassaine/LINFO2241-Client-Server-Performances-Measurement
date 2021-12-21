@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -107,18 +108,13 @@ public class ServerMain
             {
                 Request request = null;
                 lockInput.lock();
-                int requestId = -1;
                 try {
-                    while (requestId < 0 || requestId > 5) {
-                        request = readRequest(dataInputStream);
-                        requestId = request.getRequestId();
-                        System.out.println(requestId);
-                    }
+                    request = readRequest(dataInputStream);
                 }
                 finally {
                     lockInput.unlock();
                 }
-                //int requestId = request.getRequestId();
+                int requestId = request.getRequestId();
                 byte[] hashPwd = request.getHashPassword();
                 int pwdLength = request.getLengthPwd();
                 long fileLength = request.getLengthFile();
@@ -134,8 +130,8 @@ public class ServerMain
                 finally {
                     lockInput.unlock();
                 }
-
-                RequestHandler requestHandler = new RequestHandler(request, networkFile, outFile, isSmart); // TODO: queue ? See coco doesn't like that
+                outFile.close();
+                RequestHandler requestHandler = new RequestHandler(request, networkFile, isSmart); // TODO: queue ? See coco doesn't like that
                 requestHandler.start();
             }
         }
@@ -164,15 +160,13 @@ public class ServerMain
         // INSTANCE VARIABLES
         private final Request request;
         private final File networkFile;
-        private final OutputStream outFile;
         private final boolean isSmart;
 
-        public RequestHandler(Request request,File networkFile, OutputStream outFile, boolean isSmart)
+        public RequestHandler(Request request,File networkFile, boolean isSmart)
         {
             super("RequestHandlerThread");
             this.request = request;
             this.networkFile = networkFile;
-            this.outFile = outFile;
             this.isSmart = isSmart;
         }
 
@@ -225,7 +219,6 @@ public class ServerMain
 
                 System.out.println("Server replies : (requestId, fileLength) = (" + requestId + ", " + fileLen2 + ")");
                 inDecrypted.close();
-                outFile.close();
 
             }
             catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e)
