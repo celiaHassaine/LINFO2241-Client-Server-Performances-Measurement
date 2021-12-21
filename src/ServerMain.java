@@ -67,8 +67,6 @@ public class ServerMain
         Socket clientSocket = null;
         try
         {
-            // requested maximum length of the queue of incoming connections
-            // if a connection indication arrives when the queue is full, the connection is refused.
             ServerSocket serverSocket = new ServerSocket(portNumber);
             System.out.println("Waiting connection");
             // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
@@ -111,9 +109,9 @@ public class ServerMain
                 System.out.println("Server receives : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
                 // Stream to write the file to decrypt
-                File networkFile = new File("tmp/temp-server-id" + request.getRequestId() + ".bin");
+                File networkFile = new File("tmp/temp-server-id" + requestId + ".bin");
                 OutputStream outFile = new FileOutputStream(networkFile);
-                FileManagement.receiveFile(inputStream, outFile, request.getLengthFile());
+                FileManagement.receiveFile(inputStream, outFile, fileLength);
 
                 RequestHandler requestHandler = new RequestHandler(request, networkFile, outFile, isSmart); // TODO: queue ? See coco doesn't like that
                 requestHandler.start();
@@ -190,10 +188,14 @@ public class ServerMain
                 CryptoUtils.decryptFile(serverKey, networkFile, decryptedFile);
                 InputStream inDecrypted = new FileInputStream(decryptedFile);
 
-                sendResponse(dataOutputStream, requestId, decryptedFile.length());
+                // SEND THE PROCESSING INFORMATION AND FILE
+                long fileLen2 = decryptedFile.length();
+
+                sendResponse(dataOutputStream, requestId, fileLen2);
                 dataOutputStream.flush();
                 FileManagement.sendFile(inDecrypted, dataOutputStream);
-                System.out.println("Server responses to request: " + requestId);
+                System.out.println("Server replies : (requestId, fileLength) = (" + requestId + ", " + fileLen2 + ")");
+
 
                 inDecrypted.close();
                 outFile.close();

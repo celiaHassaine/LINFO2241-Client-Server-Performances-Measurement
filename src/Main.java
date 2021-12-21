@@ -9,7 +9,6 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
 import java.util.Random;
 
 
@@ -28,7 +27,7 @@ import java.util.Random;
 public class Main
 {
     // CLIENT PARAMETERS
-    private static final int nbRequest = 2;
+    private static final int nbRequest = 3;
 
     // STATIC VARIABLES AND FUNCTIONS
     // Streams variables
@@ -38,7 +37,8 @@ public class Main
     private static DataOutputStream dataOutputStream = null;
 
     // Variables related to encryption
-    private static final String[] passwords = {"linfo", "coco", "ramin", "love", "merlin"};
+    //private static final String[] passwords = {"linfo", "coco", "ramin", "love", "merlin"};
+    private static final String[] passwords = {"abc", "abcd", "abcde", "abcdef", "abcdefg"};
     private static final String srcFolderToEncrypt = "files/Files-5MB/";
     private static final int nbFilesInSrc = 5;
     private static final String destFolderEncrypted = "files-encrypted/Files-5MB/";
@@ -92,8 +92,8 @@ public class Main
         {
             try
             {
-                File fileToEncrypt = new File(srcFolder + "/file-" + i + ".bin");
                 String password = passwords[i-1];
+                File fileToEncrypt = new File(srcFolder + "file-" + i + ".bin");
                 SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
                 File encryptedFile = new File(dstFolder + "file-" + i + ".bin");
 
@@ -114,7 +114,7 @@ public class Main
 
         // Encrypted file creation
         System.out.println("Files in " + srcFolderToEncrypt + "encryption");
-        //encryptFolder(srcFolderToEncrypt, nbFilesInSrc, destFolderEncrypted);
+        encryptFolder(srcFolderToEncrypt, nbFilesInSrc, destFolderEncrypted);
         System.out.println("Files encrypted in " + destFolderEncrypted);
 
         // Connection between server and client
@@ -239,7 +239,7 @@ public class Main
                     OutputStream outFile = new FileOutputStream(decryptedClient);
 
                     FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
-                    outFile.close();
+                    //outFile.close();
                     nbResponseReceived++;
                 }
             }
