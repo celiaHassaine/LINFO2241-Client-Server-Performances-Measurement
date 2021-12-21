@@ -9,14 +9,13 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ServerMain
 {
     // SERVER PARAMETERS
-    private static final String serverIpAddress = "81.246.239.219";
+    private static final String serverIpAddress = "localhost";
     private static final int portNumber = 3333;
     private static final boolean isSmart = true;
 
@@ -106,15 +105,20 @@ public class ServerMain
         {
             while(true)
             {
-                Request request;
+                Request request = null;
                 lockInput.lock();
+                int requestId = -1;
                 try {
-                    request = readRequest(dataInputStream);
+                    while (requestId < 0 || requestId > 5) {
+                        request = readRequest(dataInputStream);
+                        requestId = request.getRequestId();
+                        System.out.println(requestId);
+                    }
                 }
                 finally {
                     lockInput.unlock();
                 }
-                int requestId = request.getRequestId();
+                //int requestId = request.getRequestId();
                 byte[] hashPwd = request.getHashPassword();
                 int pwdLength = request.getLengthPwd();
                 long fileLength = request.getLengthFile();

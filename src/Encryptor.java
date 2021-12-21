@@ -42,9 +42,9 @@ public class Encryptor {
             for (int i = 0; i < nbFiles; i++)
             {
                 Random rnd = new Random();
-                if (rnd.nextDouble() > 0.8)
+                if (rnd.nextDouble() > 0.5)
                 {
-                    this.passwords[i] = "hello";  // Word from the dictionary
+                    this.passwords[i] = "linfoo";  // Word from the dictionary
                 }
                 else
                 {

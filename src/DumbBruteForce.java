@@ -28,7 +28,7 @@ public class DumbBruteForce extends BruteForce
     {
         try
         {
-            String password = "test";
+            String password = "linfoo";
             byte[] hashPwd = hashSHA1(password);
             BruteForce bruteForce = new DumbBruteForce(password.length(),hashPwd);
 

@@ -13,10 +13,6 @@ import java.util.HashMap;
 import java.util.Random;
 
 
-//TODO: TASK 1
-//TODO: communiquer entre 2 pc différents sur un réseaux non local: Merlin
-
-
 //TODO: TASK 2
 //TODO: implement a small client ap sending request at random times (choose some distribution) : Corentin
 //TODO: make some measurements with different request rate, difficulities : Corentin
@@ -44,6 +40,7 @@ public class Main
     private static final String destFolderEncrypted = "files-encrypted/Files-5MB/";
 
     private static final int foldIdx = 0;
+    private static final int maxRequestNum = 255;
     private static final Encryptor.Folder foldToSend = Encryptor.folders[foldIdx];
 
 
@@ -133,7 +130,6 @@ public class Main
          */
         public static double gaussian(double mean, double std) {
             Random rnd = new Random();
-
             return (rnd.nextGaussian()*std) + mean;
         }
 
@@ -164,20 +160,20 @@ public class Main
             System.out.println("Run ClientSender");
             try
             {
+                int fileIdx = 1;
                 int requestId = 1;
-                double inter_request_time = nextExp(0.12);  // Mean of 2 seconds
+                double inter_request_time = nextExp(0.5);  // Mean of 2 seconds
                 double start_time = getCurrentTime(); // Start time in seconds
                 double deltaTime;
                 while (true)
                 {
                     deltaTime = getCurrentTime() - start_time;
                     if (deltaTime >= inter_request_time) {
-                        String password = foldToSend.passwords[requestId-1];
-                        File encryptedFile = new File(foldToSend.getPath("files-encrypted", requestId));
+                        String password = foldToSend.passwords[fileIdx-1];
+                        File encryptedFile = new File(foldToSend.getPath("files-encrypted", fileIdx));
                         InputStream inFile = new FileInputStream(encryptedFile);
 
                         // SEND THE PROCESSING INFORMATION AND FILE
-                        System.out.println(password);
                         byte[] hashPwd = hashSHA1(password);
                         int pwdLength = password.length();
                         long fileLength = encryptedFile.length();
@@ -188,10 +184,11 @@ public class Main
                         startTimes.put(requestId, System.currentTimeMillis());
                         System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
-                        inter_request_time = nextExp(2);
+                        inter_request_time = nextExp(0.5);
                         start_time = getCurrentTime();
 
-                        requestId = (requestId%foldToSend.nbFiles) + 1;
+                        requestId = (requestId % maxRequestNum) + 1;
+                        fileIdx = (fileIdx % foldToSend.nbFiles) + 1;
                         inFile.close();
                     }
                 }
@@ -225,9 +222,7 @@ public class Main
                     System.out.println("Client receives : (requestId, fileLength) = (" + requestId + ", " + fileLengthServer + ")");
                     File decryptedClient = new File("tmp/file-" + requestId + "-decrypted-client" + ".bin");
                     OutputStream outFile = new FileOutputStream(decryptedClient);
-                    System.out.println("before receive file");
                     FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
-                    System.out.println("after receive file");
                     long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
                     System.out.println("Time observed by the client "+requestId+": " + deltaTime + "ms");
                     //outFile.close();
