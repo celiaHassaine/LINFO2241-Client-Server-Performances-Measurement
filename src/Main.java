@@ -39,7 +39,6 @@ public class Main
     private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // (requestID, send time)
 
     // Variables related to encryption
-    //private static final String[] passwords = {"linfo", "coco", "ramin", "love", "merlin"};
     private static final String[] passwords = {"abc", "abcd", "abcde", "abcdef", "abcdefg"};
     private static final String srcFolderToEncrypt = "files/Files-5MB/";
     private static final String destFolderEncrypted = "files-encrypted/Files-5MB/";
@@ -59,35 +58,6 @@ public class Main
             return md.digest(data.getBytes());
     }
 
-
-    /**
-     * This function encrypt the nbFiles contained in the folder srcFolder and places the encrypted files
-     * in the folder dstFolder
-     * @param srcFolder source folder of the files to encrypt
-     * @param nbFiles number of files in the source folder
-     * @param dstFolder destination folder to place the encrypted files
-     */
-    public static void encryptFolder(String srcFolder, int nbFiles, String dstFolder)
-    {
-        for(int i = 1; i<=nbFiles; i++)
-        {
-            try
-            {
-                String password = passwords[i-1];
-                File fileToEncrypt = new File(srcFolder + "file-" + i + ".bin");
-                SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
-                File encryptedFile = new File(dstFolder + "file-" + i + ".bin");
-
-                CryptoUtils.encryptFile(keyGenerated, fileToEncrypt, encryptedFile);
-                System.out.println(encryptedFile.getName() + " of size " + encryptedFile.length() + " encrypted with password: " + password);
-            }
-            catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException | IOException | BadPaddingException | InvalidKeyException e)
-            {
-                e.printStackTrace();
-                System.err.println("EncryptFolder exception: unable to encrypt files in " + srcFolderToEncrypt);
-            }
-        }
-    }
 
 
     public static void main(String[] args)
@@ -194,7 +164,7 @@ public class Main
             try
             {
                 int requestId = 1;
-                double inter_request_time = nextExp(2.0);  // Mean of 2 seconds
+                double inter_request_time = nextExp(0.12);  // Mean of 2 seconds
                 double start_time = getCurrentTime(); // Start time in seconds
                 double deltaTime;
                 while (true)
@@ -254,7 +224,9 @@ public class Main
                     System.out.println("Client receives : (requestId, fileLength) = (" + requestId + ", " + fileLengthServer + ")");
                     File decryptedClient = new File("tmp/file-" + requestId + "-decrypted-client" + ".bin");
                     OutputStream outFile = new FileOutputStream(decryptedClient);
+                    System.out.println("before receive file");
                     FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
+                    System.out.println("after receive file");
                     long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
                     System.out.println("Time observed by the client "+requestId+": " + deltaTime + "ms");
                     //outFile.close();

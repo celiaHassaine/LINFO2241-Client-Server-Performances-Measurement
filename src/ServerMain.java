@@ -9,13 +9,14 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
-
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ServerMain
 {
     // SERVER PARAMETERS
-    private static final String serverIpAddress = "localhost";
+    private static final String serverIpAddress = "81.246.239.219";
     private static final int portNumber = 3333;
     private static final boolean isSmart = true;
 
@@ -27,6 +28,10 @@ public class ServerMain
     private static DataOutputStream dataOutputStream = null;
 
     private static Map<String, String> dictionary;
+
+    // LOCKS FOR THREADS
+    private static final ReentrantLock lockInput = new ReentrantLock();
+    private static final ReentrantLock lockOutput = new ReentrantLock();
 
     /**
      * This function reads a stream and creates an object Request
@@ -101,7 +106,14 @@ public class ServerMain
         {
             while(true)
             {
-                Request request = readRequest(dataInputStream);
+                Request request;
+                lockInput.lock();
+                try {
+                    request = readRequest(dataInputStream);
+                }
+                finally {
+                    lockInput.unlock();
+                }
                 int requestId = request.getRequestId();
                 byte[] hashPwd = request.getHashPassword();
                 int pwdLength = request.getLengthPwd();
@@ -111,7 +123,13 @@ public class ServerMain
                 // Stream to write the file to decrypt
                 File networkFile = new File("tmp/temp-server-id" + requestId + ".bin");
                 OutputStream outFile = new FileOutputStream(networkFile);
-                FileManagement.receiveFile(inputStream, outFile, fileLength);
+                lockInput.lock();
+                try {
+                    FileManagement.receiveFile(inputStream, outFile, fileLength);
+                }
+                finally {
+                    lockInput.unlock();
+                }
 
                 RequestHandler requestHandler = new RequestHandler(request, networkFile, outFile, isSmart); // TODO: queue ? See coco doesn't like that
                 requestHandler.start();
@@ -190,13 +208,18 @@ public class ServerMain
 
                 // SEND THE PROCESSING INFORMATION AND FILE
                 long fileLen2 = decryptedFile.length();
+                lockOutput.lock();
+                try {
+                    sendResponse(dataOutputStream, requestId, fileLen2);  // TODO
+                    dataOutputStream.flush();
+                    FileManagement.sendFile(inDecrypted, dataOutputStream);
+                }
+                finally {
+                    lockOutput.unlock();
+                }
 
-                sendResponse(dataOutputStream, requestId, fileLen2);
-                dataOutputStream.flush();
-                FileManagement.sendFile(inDecrypted, dataOutputStream);
+
                 System.out.println("Server replies : (requestId, fileLength) = (" + requestId + ", " + fileLen2 + ")");
-
-
                 inDecrypted.close();
                 outFile.close();
 
