@@ -192,6 +192,11 @@ public class Main
             return (rnd.nextGaussian()*std) + mean;
         }
 
+        public static double nextExp(double mean) {
+            Random rnd = new Random();
+            return -mean*Math.log(rnd.nextDouble());
+        }
+
         /**
          * Returns current time in seconds
          */
@@ -211,7 +216,7 @@ public class Main
             try
             {
                 int requestId = 1;
-                double inter_request_time = gaussian(2.0, 1.0);  // Mean of 2 seconds and std of 1 second
+                double inter_request_time = nextExp(2.0);  // Mean of 2 seconds and std of 1 second
                 double start_time = getCurrentTime(); // Start time in seconds
                 double deltaTime;
                 while (true)
@@ -234,7 +239,7 @@ public class Main
                         System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
 
                         requestId++;
-                        inter_request_time = gaussian(2, 1);
+                        inter_request_time = nextExp(2);
                         start_time = getCurrentTime();
 
                         inFile.close();
