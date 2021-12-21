@@ -55,9 +55,8 @@ public class Encryptor {
     }
 
 
-    public static void main(String[] args) {
-        encryptFolder(folders[0]);
-        encryptFolders();
+    public static void main(int args) {
+        encryptFolder(folders[args]);
         System.out.println("Encryption finished");
     }
 

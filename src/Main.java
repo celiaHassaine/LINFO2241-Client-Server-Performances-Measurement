@@ -43,7 +43,8 @@ public class Main
     private static final String srcFolderToEncrypt = "files/Files-5MB/";
     private static final String destFolderEncrypted = "files-encrypted/Files-5MB/";
 
-    private static final Encryptor.Folder foldToSend = Encryptor.folders[0];
+    private static final int foldIdx = 0;
+    private static final Encryptor.Folder foldToSend = Encryptor.folders[foldIdx];
 
 
     // STATIC FUNCTIONS
@@ -62,7 +63,7 @@ public class Main
 
     public static void main(String[] args)
     {
-        Encryptor.main(new String[0]);
+        Encryptor.main(foldIdx);
         // Connection between server and client
         Socket clientSocket = null;
         try
