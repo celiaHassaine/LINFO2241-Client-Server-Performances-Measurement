@@ -21,17 +21,7 @@ public class ServerMain
     private static final int N_THREADS = 6;
 
     // STATIC VARIABLES AND FUNCTIONS
-    // Streams variables
-    private static InputStream inputStream = null;
-    private static DataInputStream dataInputStream = null;
-    private static OutputStream outputStream;
-    private static DataOutputStream dataOutputStream = null;
-
     private static Map<String, String> dictionary;
-
-    // LOCKS FOR THREADS
-    private static final ReentrantLock lockInput = new ReentrantLock();
-    private static final ReentrantLock lockOutput = new ReentrantLock();
 
     /**
      * This function reads a stream and creates an object Request
@@ -71,74 +61,23 @@ public class ServerMain
         }
 
         // Connection between server and client
-        Socket clientSocket = null;
         try
         {
-            ServerSocket serverSocket = new ServerSocket(Main.portNumber);
+            ServerSocket serverSocket = new ServerSocket(Main.portNumber, 105);
             System.out.println("Waiting connection");
-            clientSocket = serverSocket.accept(); // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
-            System.out.println("Connection from: " + clientSocket);
+            while(true)
+            {
+                // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Connection from: " + clientSocket);
+                RequestHandler req = new RequestHandler(clientSocket, isSmart);
+                threadPool.execute(req);
+            }
         }
         catch (IOException ioException)
         {
             System.err.println("unable to connect to connect client and server");
             ioException.printStackTrace();
-        }
-
-        // Streams creation
-        try
-        {
-            // Stream to read request from socket
-            inputStream = clientSocket.getInputStream();
-            dataInputStream = new DataInputStream(inputStream);
-
-            // Stream to write response to socket
-            outputStream = clientSocket.getOutputStream();
-            dataOutputStream = new DataOutputStream(outputStream);
-        }
-        catch (IOException e)
-        {
-            System.err.println("Could not create required streams");
-            System.exit(-1);
-        }
-
-        // Request handling
-        try
-        {
-            while(true)
-            {
-                Request request;
-                lockInput.lock();
-                try {
-                    request = readRequest(dataInputStream);
-                }
-                finally {
-                    lockInput.unlock();
-                }
-                int requestId = request.getRequestId();         if(requestId < 0 || requestId > 700) { System.err.println("RECEIVE CORRUPTED REQUEST");}
-                byte[] hashPwd = request.getHashPassword();
-                int pwdLength = request.getLengthPwd();
-                long fileLength = request.getLengthFile();
-                System.out.println("Server receives : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
-
-                // Stream to write the file to decrypt
-                File networkFile = new File("tmp/temp-server-id" + requestId + ".bin");
-                OutputStream outFile = new FileOutputStream(networkFile);
-                lockInput.lock();
-                try {
-                    FileManagement.receiveFile(inputStream, outFile, fileLength);
-                }
-                finally {
-                    lockInput.unlock();
-                }
-                RequestHandler req = new RequestHandler(request, networkFile, isSmart);
-                threadPool.execute(req);
-                outFile.close();
-            }
-        }
-        catch ( IOException e)
-        {
-            e.printStackTrace();
         }
     }
 
@@ -159,25 +98,57 @@ public class ServerMain
         }
 
         // INSTANCE VARIABLES
-        private final Request request;
-        private final File networkFile;
+        private final Socket clientSocket;
         private final boolean isSmart;
 
-        public RequestHandler(Request request, File networkFile, boolean isSmart)
+        public RequestHandler(Socket clientSocket, boolean isSmart)
         {
-            this.request = request;
-            this.networkFile = networkFile;
+            this.clientSocket = clientSocket;
             this.isSmart = isSmart;
         }
 
         @Override
         public void run()
         {
+            // Streams creation
+            InputStream inputStream = null;
+            DataInputStream dataInputStream = null;
+
+            // Stream to write response to socket
+            OutputStream outputStream = null;
+            DataOutputStream dataOutputStream = null;
+
             try
             {
-                int requestId = request.getRequestId();
+                // Stream to read request from socket
+                inputStream = clientSocket.getInputStream();
+                dataInputStream = new DataInputStream(inputStream);
+
+                // Stream to write response to socket
+                outputStream = clientSocket.getOutputStream();
+                dataOutputStream = new DataOutputStream(outputStream);
+            }
+            catch (IOException e)
+            {
+                System.err.println("Could not create required streams");
+                System.exit(-1);
+            }
+
+            // Request handling
+            try
+            {
+                Request request = readRequest(dataInputStream);
+
+                int requestId = request.getRequestId();         if(requestId < 0 || requestId > 700) { System.err.println("RECEIVE CORRUPTED REQUEST");}
                 byte[] hashPwd = request.getHashPassword();
                 int pwdLength = request.getLengthPwd();
+                long fileLength = request.getLengthFile();
+                System.out.println("Server receives : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
+
+                // Stream to write the file to decrypt
+                File networkFile = new File("tmp/temp-server-id" + requestId + ".bin");
+                OutputStream outFile = new FileOutputStream(networkFile);
+                FileManagement.receiveFile(inputStream, outFile, fileLength);
 
                 // BRUTEFORCE:
                 // Password is determined by using a bruteforce method implemented in the classes: BruteForce, DumbBruteForce, SmarterBruteForce
@@ -206,20 +177,12 @@ public class ServerMain
 
                 // SEND THE PROCESSING INFORMATION AND FILE
                 long fileLen2 = decryptedFile.length();
-                lockOutput.lock();
-                try {
-                    sendResponse(dataOutputStream, requestId, fileLen2);
-                    dataOutputStream.flush();
-                    FileManagement.sendFile(inDecrypted, dataOutputStream);
-                }
-                finally {
-                    lockOutput.unlock();
-                }
-
+                sendResponse(dataOutputStream, requestId, fileLen2);
+                dataOutputStream.flush();
+                FileManagement.sendFile(inDecrypted, dataOutputStream);
 
                 System.out.println("Server replies : (requestId, fileLength) = (" + requestId + ", " + fileLen2 + ")");
                 inDecrypted.close();
-
             }
             catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e)
             {

@@ -14,20 +14,15 @@ public class Main
 
     // CLIENT PARAMETERS
     // Measure parameter
-    private static final double rate = 64; // # request/s
+    private static final double rate = 10; // # request/s
     private static FileWriter fileWriter = null;
     // Encryption parameters
     private static final int foldIdx = 0; // index of folder to encrypt
     private static final Encryptor.Folder foldToSend = Encryptor.folders[foldIdx];
     // Request parameters
-    private static final int nbRequestToSend = 100;
+    private static final int nbClients = 100;
 
     // STATIC VARIABLES AND FUNCTIONS
-    // Streams variables
-    private static InputStream inputStream = null;
-    private static DataInputStream dataInputStream = null;
-    private static OutputStream outputStream = null;
-    private static DataOutputStream dataOutputStream = null;
     // Timer variables
     private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // (requestID, send time)
 
@@ -61,6 +56,23 @@ public class Main
         }
     }
 
+    /**
+     * Returns a random double sample following a exponential distribution
+     * @param rate rate of the exponential distribution (number of events per second)
+     */
+    public static double nextExp(double rate)
+    {
+        Random rnd = new Random();
+        return -(1/rate)*Math.log(rnd.nextDouble());
+    }
+
+    /**
+     * Returns current time in seconds
+     */
+    public static double getCurrentTime() {
+        return System.currentTimeMillis()/1000.0;
+    }
+
     public static void main(String[] args)
     {
         measureSetup("measures/Files-20KB.csv");
@@ -68,48 +80,50 @@ public class Main
         // Encryption of folder foldIdx
         Encryptor.main(new String[] {foldIdx+""});
 
-        // Connection between server and client
-        Socket clientSocket = null;
-        try
-        {
-            clientSocket = new Socket(serverIpAddress, portNumber);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            System.err.println("Failed to connect to server");
-            System.exit(-1);
-        }
-        System.out.println("Socket created");
+        double start_time = getCurrentTime(); // Start time in seconds
+        double deltaTime = 0.0;
+        double inter_request_time = nextExp(rate);
 
-        // Streams creation
-        try
+        int iClient =0;
+        while(iClient < nbClients)
         {
-            // Stream to write request to socket
-            outputStream = clientSocket.getOutputStream();
-            dataOutputStream = new DataOutputStream(outputStream);
+            deltaTime = getCurrentTime() - start_time;
+            if (deltaTime >= inter_request_time)
+            {
+                // Connection between with server
+                try
+                {
+                    Socket clientSocket = new Socket(serverIpAddress, portNumber);
+                    ClientThread clientThread = new ClientThread(iClient, clientSocket);
+                    // Sender thread: send requests to the server
+                    clientThread.start();
+                    inter_request_time = nextExp(rate);
+                    start_time = getCurrentTime();
+                    iClient++;
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                    System.err.println("Failed to connect to server");
+                    System.exit(-1);
+                }
+                System.out.println("Socket created");
+            }
 
-            // Stream to read response from socket
-            inputStream = clientSocket.getInputStream();
-            dataInputStream = new DataInputStream(inputStream);
         }
-        catch (IOException e)
-        {
-            System.err.println("Could not create required streams");
-            System.exit(-1);
-        }
-
-        // Sender thread: send requests to the server
-        ClientSender clientSender = new ClientSender();
-        clientSender.start();
-
-        // Receiver thread: handle response of previous sent requests
-        ClientReceiver clientReceiver = new ClientReceiver();
-        clientReceiver.start();
     }
 
-    private static class ClientSender extends Thread
+    private static class ClientThread extends Thread
     {
+        // INSTANCE VARIABLES
+        private int iClient;
+        private Socket clientSocket;
+        // Streams variables
+        private InputStream inputStream = null;
+        private DataInputStream dataInputStream = null;
+        private OutputStream outputStream = null;
+        private DataOutputStream dataOutputStream = null;
+
         // STATIC FUNCTION
         /**
          * This function is used by a client to send the information needed by the server to process the file
@@ -128,113 +142,88 @@ public class Main
             out.writeLong(fileLength);
         }
 
-        /**
-         * Returns a random double sample following a exponential distribution
-         * @param rate rate of the exponential distribution (number of events per second)
-         */
-        public static double nextExp(double rate)
+        public ClientThread(int iClient, Socket clientSocket)
         {
-            Random rnd = new Random();
-            return -(1/rate)*Math.log(rnd.nextDouble());
+            this.iClient = iClient;
+            this.clientSocket = clientSocket;
+            // Streams creation
+            try
+            {
+                // Stream to write request to socket
+                outputStream = clientSocket.getOutputStream();
+                dataOutputStream = new DataOutputStream(outputStream);
+
+                // Stream to read response from socket
+                inputStream = clientSocket.getInputStream();
+                dataInputStream = new DataInputStream(inputStream);
+            }
+            catch (IOException e)
+            {
+                System.err.println("Could not create required streams");
+                System.exit(-1);
+            }
         }
 
-        /**
-         * Returns current time in seconds
-         */
-        public static double getCurrentTime() {
-            return System.currentTimeMillis()/1000.0;
-        }
-
-        public ClientSender()
-        {
-            super("ClientSenderThread");
-        }
 
         @Override
         public void run()
         {
+            // ==========================================================
+            //                          SENDING
+            // ==========================================================
             System.out.println("Run ClientSender");
             try
             {
                 int fileIdx = 0;
-                int requestId = 1;
-                double inter_request_time = nextExp(rate);
-                double start_time = getCurrentTime(); // Start time in seconds
-                double deltaTime;
-                while (requestId <= nbRequestToSend )
-                {
-                    deltaTime = getCurrentTime() - start_time;
-                    if (deltaTime >= inter_request_time)
-                    {
-                        String password = foldToSend.passwords[fileIdx];
-                        File encryptedFile = new File( foldToSend.getPath("files-encrypted", fileIdx));
-                        InputStream inFile = new FileInputStream(encryptedFile);
+                String password = foldToSend.passwords[fileIdx];
+                File encryptedFile = new File( foldToSend.getPath("files-encrypted", fileIdx));
+                InputStream inFile = new FileInputStream(encryptedFile);
 
-                        // SEND THE PROCESSING INFORMATION AND FILE
-                        byte[] hashPwd = hashSHA1(password);
-                        int pwdLength = password.length();
-                        long fileLength = encryptedFile.length();
+                // SEND THE PROCESSING INFORMATION AND FILE
+                byte[] hashPwd = hashSHA1(password);
+                int pwdLength = password.length();
+                long fileLength = encryptedFile.length();
 
-                        sendRequest(dataOutputStream, requestId, hashPwd, pwdLength, fileLength);
-                        dataOutputStream.flush();
-                        FileManagement.sendFile(inFile, dataOutputStream);
-                        startTimes.put(requestId, System.currentTimeMillis());
-                        System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + requestId + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
-
-                        inter_request_time = nextExp(rate);
-                        start_time = getCurrentTime();
-
-                        requestId += 1;
-                        fileIdx++;
-                        inFile.close();
-                    }
-                }
+                sendRequest(dataOutputStream, iClient, hashPwd, pwdLength, fileLength);
+                dataOutputStream.flush();
+                FileManagement.sendFile(inFile, dataOutputStream);
+                startTimes.put(iClient, System.currentTimeMillis());
+                System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + iClient + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
+                inFile.close();
             }
             catch (NoSuchAlgorithmException | IOException e)
             {
                 e.printStackTrace();
             }
+            //System.out.println("End ClientSender");
 
-            System.out.println("End ClientSender");
-        }
-    }
+            // ==========================================================
+            //                          RECEIVING
+            // ==========================================================
 
-    private static class ClientReceiver extends Thread
-    {
-        public ClientReceiver()
-        {
-            super("ClientReceiverThread");
-        }
-
-        @Override
-        public void run()
-        {
-            System.out.println("Run ClientReceiver");
+            //System.out.println("Run ClientReceiver");
             try
             {
-                int nbRequestReceived = 0;
-                while(nbRequestReceived < nbRequestToSend)
-                {
-                    int requestId = dataInputStream.readInt();
-                    long fileLengthServer = dataInputStream.readLong();
-                    System.out.println("Client receives : (requestId, fileLength) = (" + requestId + ", " + fileLengthServer + ")");
-                    File decryptedClient = new File("tmp/file-" + requestId % foldToSend.nbFiles + "-decrypted-client" + ".bin");
-                    OutputStream outFile = new FileOutputStream(decryptedClient);
-                    FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
-                    long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
-                    System.out.println("\t Time observed by the client "+requestId+": " + deltaTime + "ms");
-                    // Write in csv file the response time
-                    fileWriter.write(requestId + ", " + deltaTime/1000.0 + "\n");
-                    outFile.close();
-                    nbRequestReceived += 1;
-                }
-                fileWriter.close();
+                int requestId = dataInputStream.readInt();
+                long fileLengthServer = dataInputStream.readLong();
+                System.out.println("Client receives : (requestId, fileLength) = (" + requestId + ", " + fileLengthServer + ")");
+
+                File decryptedClient = new File("tmp/file-" + requestId % foldToSend.nbFiles + "-decrypted-client" + ".bin");
+                OutputStream outFile = new FileOutputStream(decryptedClient);
+                FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
+
+                long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
+                System.out.println("\t Time observed by the client "+requestId+": " + deltaTime + "ms");
+
+                inputStream.close();
+                outputStream.close();
+                clientSocket.close();
             }
             catch (IOException e)
             {
                 e.printStackTrace();
             }
-            System.out.println("End ClientReceiver");
+            //System.out.println("End ClientReceiver");
         }
     }
 }
