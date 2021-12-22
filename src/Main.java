@@ -8,6 +8,10 @@ import java.util.Random;
 
 public class Main
 {
+    // SERVER
+    private static final String serverIpAddress = "localhost";
+    public static final int portNumber = 3333;
+
     // CLIENT PARAMETERS
     // Measure parameter
     private static final double rate = 2; //parameter of exponential distribution
@@ -68,7 +72,7 @@ public class Main
         Socket clientSocket = null;
         try
         {
-            clientSocket = new Socket(ServerMain.getIpAddress(), ServerMain.getPortNumber());
+            clientSocket = new Socket(serverIpAddress, portNumber);
         }
         catch (IOException e)
         {

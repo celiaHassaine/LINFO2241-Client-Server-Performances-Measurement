@@ -17,8 +17,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ServerMain
 {
     // SERVER PARAMETERS
-    private static final String serverIpAddress = "localhost";
-    private static final int portNumber = 3333;
     private static final boolean isSmart = false;
     private static final int N_THREADS = 6;
 
@@ -77,7 +75,7 @@ public class ServerMain
         Socket clientSocket = null;
         try
         {
-            ServerSocket serverSocket = new ServerSocket(portNumber);
+            ServerSocket serverSocket = new ServerSocket(Main.portNumber);
             System.out.println("Waiting connection");
             clientSocket = serverSocket.accept(); // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
             System.out.println("Connection from: " + clientSocket);
@@ -231,8 +229,4 @@ public class ServerMain
         }
     }
 
-
-    public static int getPortNumber() { return portNumber; }
-
-    public static String getIpAddress() { return serverIpAddress; }
 }
