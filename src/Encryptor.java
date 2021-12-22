@@ -44,18 +44,17 @@ public class Encryptor {
         {
             Random rnd = new Random(42);
             Double d;
-            int size;
+            int pwdLen;
             for (int i = 0; i < this.nbFiles * nRep; i++)
             {
                 d = rnd.nextDouble();
                 if (d < dicRatio)
                 {
-                    this.passwords[i] = "hello";  // Word from the dictionary
+                    this.passwords[i] = "test";  // Word from the dictionary
                 }
                 else
                 {
-                    size = 4+rnd.nextInt(2);
-                    this.passwords[i] = randomStringGenerator(size);
+                    this.passwords[i] = randomStringGenerator(Main.PWDLEN);
                 }
             }
         }

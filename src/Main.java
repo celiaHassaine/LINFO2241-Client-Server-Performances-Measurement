@@ -4,23 +4,32 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Scanner;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class Main
 {
     // SERVER
-    private static final String serverIpAddress = "localhost";
+    private static final String serverIpAddress = "81.241.22.42"; //"localhost";
     public static final int portNumber = 3333;
 
     // CLIENT PARAMETERS
     // Measure parameter
-    private static final double rate = 10; // # request/s
+    public static final boolean SMART = false;
+    private static final int RATE = 5;   // # request/s
+    public static final int PWDLEN = 4;     // 4+rnd.nextInt(2);
+    private static final int FOLDIDX = 3; // index of folder to encrypt
+
+
+    // Measure parameter
     private static FileWriter fileWriter = null;
     // Encryption parameters
-    private static final int foldIdx = 0; // index of folder to encrypt
-    private static final Encryptor.Folder foldToSend = Encryptor.folders[foldIdx];
+    private static final Encryptor.Folder foldToSend = Encryptor.folders[FOLDIDX];
     // Request parameters
     private static final int nbClients = 100;
+    private static int nReceived = 0;
+    private static ReentrantLock lock = new ReentrantLock();
 
     // STATIC VARIABLES AND FUNCTIONS
     // Timer variables
@@ -44,10 +53,6 @@ public class Main
         try
         {
             fileWriter = new FileWriter(file); // create FileWriter object with file as parameter
-
-            // adding header to csv
-            String[] header = { };
-            fileWriter.write("Request, Response Time [s] \n");
         }
         catch (IOException e)
         {
@@ -56,6 +61,42 @@ public class Main
         }
     }
 
+    public static void savePasswords(String[] passwords)
+    {
+        try
+        {
+            PrintWriter pr = new PrintWriter( "measures/passwords.txt");
+
+            for (int i=0; i<passwords.length ; i++)
+            {
+                pr.println(passwords[i]);
+            }
+            pr.close();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            System.out.println("No such file exists.");
+        }
+    }
+
+    public static void loadPasswords()
+    {
+        try
+        {
+            Reader reader = new FileReader("measures/passwords.txt");
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            for (int i = 0; i < nbClients; i++)
+            {
+                foldToSend.passwords[i] = bufferedReader.readLine();
+            }
+            reader.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
     /**
      * Returns a random double sample following a exponential distribution
      * @param rate rate of the exponential distribution (number of events per second)
@@ -75,14 +116,33 @@ public class Main
 
     public static void main(String[] args)
     {
-        measureSetup("measures/Files-20KB.csv");
+        measureSetup("measures/" + "measure-smart" + (SMART ? 1 : 0) + "-rate" + RATE + "-pwdLen" + PWDLEN + ".csv");
 
         // Encryption of folder foldIdx
-        Encryptor.main(new String[] {foldIdx+""});
+        //Encryptor.main(new String[]{FOLDIDX + ""});
+        // savePasswords(foldToSend.passwords);
+
+        loadPasswords();
+
+        try
+        {
+            Reader reader = new FileReader("measures/passwords.txt");
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            for (int i = 0; i < nbClients; i++)
+            {
+                foldToSend.passwords[i] = bufferedReader.readLine();
+            }
+            reader.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
 
         double start_time = getCurrentTime(); // Start time in seconds
         double deltaTime = 0.0;
-        double inter_request_time = nextExp(rate);
+        double inter_request_time = nextExp(RATE);
 
         int iClient =0;
         while(iClient < nbClients)
@@ -97,7 +157,7 @@ public class Main
                     ClientThread clientThread = new ClientThread(iClient, clientSocket);
                     // Sender thread: send requests to the server
                     clientThread.start();
-                    inter_request_time = nextExp(rate);
+                    inter_request_time = nextExp(RATE);
                     start_time = getCurrentTime();
                     iClient++;
                 }
@@ -107,10 +167,11 @@ public class Main
                     System.err.println("Failed to connect to server");
                     System.exit(-1);
                 }
-                System.out.println("Socket created");
+                //System.out.println("Socket created");
             }
 
         }
+
     }
 
     private static class ClientThread extends Thread
@@ -171,12 +232,11 @@ public class Main
             // ==========================================================
             //                          SENDING
             // ==========================================================
-            System.out.println("Run ClientSender");
+            //System.out.println("Run ClientSender");
             try
             {
-                int fileIdx = 0;
-                String password = foldToSend.passwords[fileIdx];
-                File encryptedFile = new File( foldToSend.getPath("files-encrypted", fileIdx));
+                String password = foldToSend.passwords[iClient];
+                File encryptedFile = new File( foldToSend.getPath("files-encrypted", iClient));
                 InputStream inFile = new FileInputStream(encryptedFile);
 
                 // SEND THE PROCESSING INFORMATION AND FILE
@@ -212,8 +272,20 @@ public class Main
                 OutputStream outFile = new FileOutputStream(decryptedClient);
                 FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
 
+
                 long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
                 System.out.println("\t Time observed by the client "+requestId+": " + deltaTime + "ms");
+                fileWriter.write(deltaTime + ",");
+
+                lock.lock();
+                try
+                {
+                    nReceived++;
+                }
+                finally
+                {
+                    lock.unlock();
+                }
 
                 inputStream.close();
                 outputStream.close();
@@ -222,6 +294,19 @@ public class Main
             catch (IOException e)
             {
                 e.printStackTrace();
+            }
+
+
+            if(nReceived == nbClients)
+            {
+                try
+                {
+                    fileWriter.close();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
             }
             //System.out.println("End ClientReceiver");
         }

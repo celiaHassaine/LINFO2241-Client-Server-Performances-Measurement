@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ServerMain
 {
     // SERVER PARAMETERS
-    private static final boolean isSmart = false;
+    private static final boolean isSmart = Main.SMART;
     private static final int N_THREADS = 6;
 
     // STATIC VARIABLES AND FUNCTIONS
