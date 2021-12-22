@@ -14,7 +14,7 @@ import java.util.Random;
 public class Encryptor {
     public static final Folder[] folders = new Folder[] {new Folder("20KB", 5),
             new Folder("50KB", 5), new Folder("100KB", 5),
-            new Folder("5MB", 5), new Folder("50MB", 2)};
+            new Folder("5MB", 5), new Folder("50MB", 2), new Folder("pdf",2)};
     public static final double dicRatio = 0.2;
 
     public static class Folder
@@ -37,7 +37,7 @@ public class Encryptor {
          */
         public String getPath(String rootFolder, int i)
         {
-            return rootFolder+"/Files-"+size+"/"+"file-"+i+".bin";
+            return rootFolder+"/Files-" + size + "/" + "file-"+i+".bin";
         }
 
         public void computePasswords()
