@@ -1,14 +1,7 @@
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import java.io.*;
 import java.net.Socket;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -16,7 +9,14 @@ import java.util.Random;
 public class Main
 {
     // CLIENT PARAMETERS
-    private static double rate = 2;
+    // Measure parameter
+    private static final double rate = 2; //parameter of exponential distribution
+    private static FileWriter fileWriter = null;
+    // Encryption parameters
+    private static final int foldIdx = 0; // index of folder to encrypt
+    private static final Encryptor.Folder foldToSend = Encryptor.folders[foldIdx];
+    // Request parameters
+    private static final int nbRequestToSend = 100;
 
     // STATIC VARIABLES AND FUNCTIONS
     // Streams variables
@@ -24,12 +24,8 @@ public class Main
     private static DataInputStream dataInputStream = null;
     private static OutputStream outputStream = null;
     private static DataOutputStream dataOutputStream = null;
+    // Timer variables
     private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // (requestID, send time)
-
-    private static final int maxRequestNum = 255;
-    private static final int foldIdx = 0;
-    private static final Encryptor.Folder foldToSend = Encryptor.folders[foldIdx];
-
 
     // STATIC FUNCTIONS
     /**
@@ -43,11 +39,31 @@ public class Main
             return md.digest(data.getBytes());
     }
 
+    public static void measureSetup(String filePath)
+    {
+        File file = new File(filePath); // first create file object for file placed at filepath
+        try
+        {
+            fileWriter = new FileWriter(file); // create FileWriter object with file as parameter
 
+            // adding header to csv
+            String[] header = { };
+            fileWriter.write("Request, Response Time [s] \n");
+        }
+        catch (IOException e)
+        {
+            System.err.println("ERROR CSV file creation");
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args)
     {
+        measureSetup("measures/Files-20KB.csv");
+
+        // Encryption of folder foldIdx
         Encryptor.main(foldIdx);
+
         // Connection between server and client
         Socket clientSocket = null;
         try
@@ -79,7 +95,6 @@ public class Main
             System.exit(-1);
         }
 
-
         // Sender thread: send requests to the server
         ClientSender clientSender = new ClientSender();
         clientSender.start();
@@ -110,10 +125,11 @@ public class Main
         }
 
         /**
-         * Returns a random double sample following a normal exponential
+         * Returns a random double sample following a exponential distribution
          * @param rate rate of the exponential distribution (number of events per second)
          */
-        public static double nextExp(double rate) {
+        public static double nextExp(double rate)
+        {
             Random rnd = new Random();
             return -(1/rate)*Math.log(rnd.nextDouble());
         }
@@ -138,15 +154,16 @@ public class Main
             {
                 int fileIdx = 1;
                 int requestId = 1;
-                double inter_request_time = nextExp(rate);  // Mean of 2 seconds
+                double inter_request_time = nextExp(rate);
                 double start_time = getCurrentTime(); // Start time in seconds
                 double deltaTime;
-                while (true)
+                while (requestId <= nbRequestToSend )
                 {
                     deltaTime = getCurrentTime() - start_time;
-                    if (deltaTime >= inter_request_time) {
+                    if (deltaTime >= inter_request_time)
+                    {
                         String password = foldToSend.passwords[fileIdx-1];
-                        File encryptedFile = new File(foldToSend.getPath("files-encrypted", fileIdx));
+                        File encryptedFile = new File( foldToSend.getPath("files-encrypted", fileIdx));
                         InputStream inFile = new FileInputStream(encryptedFile);
 
                         // SEND THE PROCESSING INFORMATION AND FILE
@@ -163,7 +180,7 @@ public class Main
                         inter_request_time = nextExp(rate);
                         start_time = getCurrentTime();
 
-                        requestId = (requestId % maxRequestNum) + 1;
+                        requestId += 1;
                         fileIdx = (fileIdx % foldToSend.nbFiles) + 1;
                         inFile.close();
                     }
@@ -191,7 +208,8 @@ public class Main
             System.out.println("Run ClientReceiver");
             try
             {
-                while(true)
+                int nbRequestReceived = 0;
+                while(nbRequestReceived < nbRequestToSend)
                 {
                     int requestId = dataInputStream.readInt();
                     long fileLengthServer = dataInputStream.readLong();
@@ -200,10 +218,13 @@ public class Main
                     OutputStream outFile = new FileOutputStream(decryptedClient);
                     FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
                     long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
-                    System.out.println("Time observed by the client "+requestId+": " + deltaTime + "ms");
-                    //outFile.close();
+                    System.out.println("\t Time observed by the client "+requestId+": " + deltaTime + "ms");
+                    // Write in csv file the response time
+                    fileWriter.write(requestId + ", " + deltaTime/1000.0 + "\n");
+                    outFile.close();
+                    nbRequestReceived += 1;
                 }
-
+                fileWriter.close();
             }
             catch (IOException e)
             {

@@ -42,13 +42,13 @@ public class Encryptor {
             for (int i = 0; i < nbFiles; i++)
             {
                 Random rnd = new Random();
-                if (rnd.nextDouble() > 0.5)
+                if (rnd.nextDouble() > 0.70)
                 {
-                    this.passwords[i] = "linfoo";  // Word from the dictionary
+                    this.passwords[i] = "merlin";  // Word from the dictionary
                 }
                 else
                 {
-                    this.passwords[i] = randomStringGenerator(4);
+                    this.passwords[i] = randomStringGenerator(5);
                 }
             }
         }

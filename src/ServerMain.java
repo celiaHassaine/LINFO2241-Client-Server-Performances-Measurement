@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +37,7 @@ public class ServerMain
 
     /**
      * This function reads a stream and creates an object Request
-     * @param in Stream from which to read the request
+     * @param in data stream from which to read the request
      * @return Request with information required by the server to process encrypted file
      */
     public static Request readRequest(DataInputStream in) throws IOException
@@ -46,20 +45,22 @@ public class ServerMain
         int requestId = in.readInt();
         byte [] hashPwd = new byte[20];
         int count = in.read(hashPwd,0, 20);
-        if (count < 0){
+        if (count < 0)
+        {
             throw new IOException("Server could not read from the stream");
         }
 
         int pwdLength = in.readInt();
         long fileLength = in.readLong();
-
         return new Request(requestId, hashPwd, pwdLength, fileLength);
     }
 
     public static void main(String[] args)
     {
-        // Dictionary creation
+        // ThreadPool creation
         ExecutorService threadPool = Executors.newFixedThreadPool(N_THREADS);
+
+        // Dictionary creation
         try
         {
             String filename = "files/10k-most-common_filtered.txt";
@@ -78,8 +79,7 @@ public class ServerMain
         {
             ServerSocket serverSocket = new ServerSocket(portNumber);
             System.out.println("Waiting connection");
-            // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
-            clientSocket = serverSocket.accept();
+            clientSocket = serverSocket.accept(); // listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
             System.out.println("Connection from: " + clientSocket);
         }
         catch (IOException ioException)
@@ -110,7 +110,7 @@ public class ServerMain
         {
             while(true)
             {
-                Request request = null;
+                Request request;
                 lockInput.lock();
                 try {
                     request = readRequest(dataInputStream);
@@ -118,7 +118,7 @@ public class ServerMain
                 finally {
                     lockInput.unlock();
                 }
-                int requestId = request.getRequestId();
+                int requestId = request.getRequestId();         if(requestId < 0 || requestId > 700) { System.err.println("RECEIVE CORRUPTED REQUEST");}
                 byte[] hashPwd = request.getHashPassword();
                 int pwdLength = request.getLengthPwd();
                 long fileLength = request.getLengthFile();
@@ -134,7 +134,7 @@ public class ServerMain
                 finally {
                     lockInput.unlock();
                 }
-                RequestHandler req = new RequestHandler(request, networkFile, isSmart); // TODO: queue ? See coco doesn't like that
+                RequestHandler req = new RequestHandler(request, networkFile, isSmart);
                 threadPool.execute(req);
                 outFile.close();
             }
@@ -166,7 +166,7 @@ public class ServerMain
         private final File networkFile;
         private final boolean isSmart;
 
-        public RequestHandler(Request request,File networkFile, boolean isSmart)
+        public RequestHandler(Request request, File networkFile, boolean isSmart)
         {
             this.request = request;
             this.networkFile = networkFile;
@@ -184,7 +184,7 @@ public class ServerMain
 
                 // BRUTEFORCE:
                 // Password is determined by using a bruteforce method implemented in the classes: BruteForce, DumbBruteForce, SmarterBruteForce
-                System.out.println("-- Starting bruteforce -- ");
+                System.out.println("-- Starting bruteforce for request " + requestId + " -- ");
                 BruteForce BF = isSmart ? new SmarterBruteForce(pwdLength, hashPwd, dictionary): new DumbBruteForce(pwdLength, hashPwd);
 
                 String pwdFound;
@@ -199,7 +199,7 @@ public class ServerMain
                     return;
                 }
                 System.out.println("PASSWORD FOUND: " + pwdFound);
-                System.out.println("-- End bruteforce -- ");
+                System.out.println("-- End bruteforce for request " + requestId + "-- ");
 
                 // Send the decryptedFile
                 File decryptedFile = new File("tmp/file-" + requestId + "-decrypted-server" + ".bin");
@@ -211,7 +211,7 @@ public class ServerMain
                 long fileLen2 = decryptedFile.length();
                 lockOutput.lock();
                 try {
-                    sendResponse(dataOutputStream, requestId, fileLen2);  // TODO
+                    sendResponse(dataOutputStream, requestId, fileLen2);
                     dataOutputStream.flush();
                     FileManagement.sendFile(inDecrypted, dataOutputStream);
                 }

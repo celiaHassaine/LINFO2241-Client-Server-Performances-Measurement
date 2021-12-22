@@ -12,3 +12,4 @@ out/production/LINFO2241_project/TestThread.class
 out/production/LINFO2241_project/ServerMain.class
 out/production/LINFO2241_project/ServerMain$ClientHandler.class
 *.class
+.idea/misc.xml
