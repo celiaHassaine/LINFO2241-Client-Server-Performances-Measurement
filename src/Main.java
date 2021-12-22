@@ -14,7 +14,7 @@ public class Main
 
     // CLIENT PARAMETERS
     // Measure parameter
-    private static final double rate = 16; // # request/s
+    private static final double rate = 64; // # request/s
     private static FileWriter fileWriter = null;
     // Encryption parameters
     private static final int foldIdx = 0; // index of folder to encrypt

@@ -42,12 +42,11 @@ public class ServerMain
     {
         int requestId = in.readInt();
         byte [] hashPwd = new byte[20];
-        int count = in.read(hashPwd,0, 20);
-        if (count < 0)
-        {
-            throw new IOException("Server could not read from the stream");
+        int i = 0;
+        while (i < 20) {
+            hashPwd[i] = (byte) in.read();
+            i++;
         }
-
         int pwdLength = in.readInt();
         long fileLength = in.readLong();
         return new Request(requestId, hashPwd, pwdLength, fileLength);
