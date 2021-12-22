@@ -48,7 +48,6 @@ public class Encryptor {
             for (int i = 0; i < this.nbFiles * nRep; i++)
             {
                 d = rnd.nextDouble();
-                System.out.println(d);
                 if (d < dicRatio)
                 {
                     this.passwords[i] = "hello";  // Word from the dictionary
