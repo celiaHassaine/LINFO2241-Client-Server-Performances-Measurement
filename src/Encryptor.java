@@ -43,9 +43,11 @@ public class Encryptor {
         public void computePasswords()
         {
             Random rnd = new Random(42);
+            Double d;
+            int size;
             for (int i = 0; i < this.nbFiles * nRep; i++)
             {
-                Double d = rnd.nextDouble();
+                d = rnd.nextDouble();
                 System.out.println(d);
                 if (d < dicRatio)
                 {
@@ -53,7 +55,8 @@ public class Encryptor {
                 }
                 else
                 {
-                    this.passwords[i] = randomStringGenerator(5);
+                    size = 4+rnd.nextInt(2);
+                    this.passwords[i] = randomStringGenerator(size);
                 }
             }
         }
