@@ -62,7 +62,7 @@ public class Main
         measureSetup("measures/Files-20KB.csv");
 
         // Encryption of folder foldIdx
-        Encryptor.main(foldIdx);
+        Encryptor.main(new String[] {foldIdx+""});
 
         // Connection between server and client
         Socket clientSocket = null;
@@ -152,7 +152,7 @@ public class Main
             System.out.println("Run ClientSender");
             try
             {
-                int fileIdx = 1;
+                int fileIdx = 0;
                 int requestId = 1;
                 double inter_request_time = nextExp(rate);
                 double start_time = getCurrentTime(); // Start time in seconds
@@ -162,7 +162,7 @@ public class Main
                     deltaTime = getCurrentTime() - start_time;
                     if (deltaTime >= inter_request_time)
                     {
-                        String password = foldToSend.passwords[fileIdx-1];
+                        String password = foldToSend.passwords[fileIdx];
                         File encryptedFile = new File( foldToSend.getPath("files-encrypted", fileIdx));
                         InputStream inFile = new FileInputStream(encryptedFile);
 
@@ -181,7 +181,7 @@ public class Main
                         start_time = getCurrentTime();
 
                         requestId += 1;
-                        fileIdx = (fileIdx % foldToSend.nbFiles) + 1;
+                        fileIdx++;
                         inFile.close();
                     }
                 }

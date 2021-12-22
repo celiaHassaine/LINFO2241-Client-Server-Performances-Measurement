@@ -19,7 +19,7 @@ public class ServerMain
     // SERVER PARAMETERS
     private static final String serverIpAddress = "localhost";
     private static final int portNumber = 3333;
-    private static final boolean isSmart = true;
+    private static final boolean isSmart = false;
     private static final int N_THREADS = 6;
 
     // STATIC VARIABLES AND FUNCTIONS

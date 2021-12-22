@@ -15,17 +15,19 @@ public class Encryptor {
     public static final Folder[] folders = new Folder[] {new Folder("20KB", 5),
             new Folder("50KB", 5), new Folder("100KB", 5),
             new Folder("5MB", 5), new Folder("50MB", 2)};
+    public static final double dicRatio = 0.2;
 
     public static class Folder
     {
         public final String size;
         public final int nbFiles;
         public String[] passwords;
+        public static final int nRep = 20;
         public Folder(String size, int nbFiles)
         {
             this.size = size;
             this.nbFiles = nbFiles;
-            this.passwords = new String[nbFiles];
+            this.passwords = new String[nbFiles*nRep];
         }
 
         /**
@@ -38,13 +40,16 @@ public class Encryptor {
             return rootFolder+"/Files-"+size+"/"+"file-"+i+".bin";
         }
 
-        public void computePasswords() {
-            for (int i = 0; i < nbFiles; i++)
+        public void computePasswords()
+        {
+            Random rnd = new Random(42);
+            for (int i = 0; i < this.nbFiles * nRep; i++)
             {
-                Random rnd = new Random();
-                if (rnd.nextDouble() > 0.70)
+                Double d = rnd.nextDouble();
+                System.out.println(d);
+                if (d < dicRatio)
                 {
-                    this.passwords[i] = "merlin";  // Word from the dictionary
+                    this.passwords[i] = "hello";  // Word from the dictionary
                 }
                 else
                 {
@@ -55,8 +60,9 @@ public class Encryptor {
     }
 
 
-    public static void main(int args) {
-        encryptFolder(folders[args]);
+    public static void main(String[] args) {
+        //encryptFolder(folders[0]);
+        encryptFolder(folders[Integer.parseInt(args[0])]);
         System.out.println("Encryption finished");
     }
 
@@ -67,12 +73,13 @@ public class Encryptor {
     public static void encryptFolder(Folder f)
     {
         f.computePasswords();
-        for(int i = 1; i <= f.nbFiles; i++)
+        for(int i = 0; i < f.nbFiles * Folder.nRep; i++)
         {
             try
             {
-                String password = f.passwords[i-1];
-                File fileToEncrypt = new File(f.getPath("files", i));
+                String password = f.passwords[i];
+                int fileIdx = 1+(i % f.nbFiles);
+                File fileToEncrypt = new File(f.getPath("files", fileIdx));
                 SecretKey keyGenerated = CryptoUtils.getKeyFromPassword(password);
                 File encryptedFile = new File(f.getPath("files-encrypted", i));
 
