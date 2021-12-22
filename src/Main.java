@@ -4,22 +4,21 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.concurrent.locks.ReentrantLock;
 
 
 public class Main
 {
     // SERVER
-    private static final String serverIpAddress = "81.241.22.42"; //"localhost";
+    private static final String serverIpAddress = "localhost";//""81.241.22.42"; //"localhost";
     public static final int portNumber = 3333;
 
     // CLIENT PARAMETERS
     // Measure parameter
     public static final boolean SMART = false;
-    private static final int RATE = 5;   // # request/s
-    public static final int PWDLEN = 4;     // 4+rnd.nextInt(2);
-    private static final int FOLDIDX = 3; // index of folder to encrypt
+    private static final int RATE = 5;     // # request/s
+    public static final int PWDLEN = 1;     // 4+rnd.nextInt(2);
+    private static final int FOLDIDX = 0;   // index of folder to encrypt
 
 
     // Measure parameter
@@ -65,7 +64,7 @@ public class Main
     {
         try
         {
-            PrintWriter pr = new PrintWriter( "measures/passwords.txt");
+            PrintWriter pr = new PrintWriter( "measures/passwords" + PWDLEN + ".txt");
 
             for (int i=0; i<passwords.length ; i++)
             {
@@ -84,7 +83,7 @@ public class Main
     {
         try
         {
-            Reader reader = new FileReader("measures/passwords.txt");
+            Reader reader = new FileReader("measures/passwords" + PWDLEN + ".txt");
             BufferedReader bufferedReader = new BufferedReader(reader);
             for (int i = 0; i < nbClients; i++)
             {
@@ -120,24 +119,9 @@ public class Main
 
         // Encryption of folder foldIdx
         //Encryptor.main(new String[]{FOLDIDX + ""});
-        // savePasswords(foldToSend.passwords);
+        //savePasswords(foldToSend.passwords);
 
         loadPasswords();
-
-        try
-        {
-            Reader reader = new FileReader("measures/passwords.txt");
-            BufferedReader bufferedReader = new BufferedReader(reader);
-            for (int i = 0; i < nbClients; i++)
-            {
-                foldToSend.passwords[i] = bufferedReader.readLine();
-            }
-            reader.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
 
 
         double start_time = getCurrentTime(); // Start time in seconds

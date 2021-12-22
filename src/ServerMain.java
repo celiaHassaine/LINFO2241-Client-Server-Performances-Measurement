@@ -11,7 +11,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ServerMain
@@ -44,9 +43,6 @@ public class ServerMain
 
     public static void main(String[] args)
     {
-        // ThreadPool creation
-        ExecutorService threadPool = Executors.newFixedThreadPool(N_THREADS);
-
         // Dictionary creation
         try
         {
@@ -59,6 +55,10 @@ public class ServerMain
             e.details();
             System.exit(-1);
         }
+
+        // ThreadPool creation
+        ExecutorService threadPool = Executors.newFixedThreadPool(N_THREADS);
+
 
         // Connection between server and client
         try
