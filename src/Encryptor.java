@@ -15,7 +15,7 @@ public class Encryptor {
     public static final Folder[] folders = new Folder[] {new Folder("20KB", 5),
             new Folder("50KB", 5), new Folder("100KB", 5),
             new Folder("5MB", 5), new Folder("50MB", 2), new Folder("pdf",2)};
-    public static final double dicRatio = 0.2;
+    public static final double dicRatio = 0.3;
 
     public static class Folder
     {
@@ -44,7 +44,6 @@ public class Encryptor {
         {
             Random rnd = new Random(42);
             Double d;
-            int pwdLen;
             for (int i = 0; i < this.nbFiles * nRep; i++)
             {
                 d = rnd.nextDouble();
