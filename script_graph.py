@@ -14,11 +14,11 @@ def meanFile(rate, pwdLen, smart):
 
 # Rate variation
 rates = [5, 25, 50, 75, 100]
-avgRespDumb = [meanFile(rates[i], 4, 0) for i in range(len(rates))]
-avgRespSmart = [meanFile(rates[i], 4, 1) for i in range(len(rates))]
+avgRespDumb = [meanFile(rates[i], 3, 0) for i in range(len(rates))]
+avgRespSmart = [meanFile(rates[i], 3, 1) for i in range(len(rates))]
 plt.plot(rates, avgRespDumb)
 plt.plot(rates, avgRespSmart)
-plt.title("Average response time VS request rate for 5MB files")
+plt.title("Average response time VS request rate for 20kB files")
 plt.xlabel("Rate (# requests/s)")
 plt.ylabel("Average response time (s)")
 plt.show()
@@ -29,7 +29,7 @@ avgRespDumb = [meanFile(25, pwdLengths[i], 0) for i in range(len(pwdLengths))]
 avgRespSmart = [meanFile(25, pwdLengths[i], 1) for i in range(len(pwdLengths))]
 plt.plot(pwdLengths, avgRespDumb)
 plt.plot(rates, avgRespSmart)
-plt.title("Average response time VS password size for 5MB files")
+plt.title("Average response time VS password size for 20kB files")
 plt.xlabel("Password size (# char)")
 plt.ylabel("Average response time (s)")
 plt.show()
