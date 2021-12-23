@@ -15,7 +15,7 @@ public class Main
 
     // CLIENT PARAMETERS
     // Measure parameter
-    public static final boolean SMART = true;
+    public static final boolean SMART = false;
     private static final int RATE = 5;   // # request/s
     public static final int PWDLEN = 4;     // 4+rnd.nextInt(2);
     private static final int FOLDIDX = 3; // index of folder to encrypt
