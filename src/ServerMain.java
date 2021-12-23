@@ -17,7 +17,7 @@ public class ServerMain
 {
     // SERVER PARAMETERS
     private static final boolean isSmart = Main.SMART;
-    private static final int N_THREADS = 6;
+    private static final int N_THREADS = 12;
 
     // STATIC VARIABLES AND FUNCTIONS
     private static Map<String, String> dictionary;
