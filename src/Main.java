@@ -10,14 +10,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Main
 {
     // SERVER PARAMETERS
-    private static final String serverIpAddress = "81.241.22.42";
-    public static final int portNumber = 3333;
+    private static final String serverIpAddress = "91.182.98.69";//"81.241.22.42";
+    public static final int portNumber = 15679;
 
     // CLIENT PARAMETERS
     // Measure parameters
     public static final boolean SMART = true;
-    private static final int RATE = 100;          // # request/s
-    public static final int PWDLEN = 5;
+    private static final int RATE = 80;          // # request/s
+    public static final int PWDLEN = 6;
     private static final int FOLDIDX = 0;       // index of folder to encrypt
     private static final int nClients = 100;
 
