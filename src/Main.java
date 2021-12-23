@@ -9,30 +9,24 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Main
 {
-    // SERVER
-    private static final String serverIpAddress = "localhost";//""81.241.22.42"; //"localhost";
+    // SERVER PARAMETERS
+    private static final String serverIpAddress = "81.241.22.42";
     public static final int portNumber = 3333;
 
     // CLIENT PARAMETERS
-    // Measure parameter
-    public static final boolean SMART = false;
-    private static final int RATE = 5;     // # request/s
-    public static final int PWDLEN = 1;     // 4+rnd.nextInt(2);
-    private static final int FOLDIDX = 0;   // index of folder to encrypt
+    // Measure parameters
+    public static final boolean SMART = true;
+    private static final int RATE = 100;          // # request/s
+    public static final int PWDLEN = 3;
+    private static final int FOLDIDX = 0;       // index of folder to encrypt
+    private static final int nClients = 100;
 
-
-    // Measure parameter
-    private static FileWriter fileWriter = null;
-    // Encryption parameters
-    private static final Encryptor.Folder foldToSend = Encryptor.folders[FOLDIDX];
-    // Request parameters
-    private static final int nbClients = 100;
-    private static int nReceived = 0;
-    private static ReentrantLock lock = new ReentrantLock();
-
-    // STATIC VARIABLES AND FUNCTIONS
-    // Timer variables
-    private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // (requestID, send time)
+    // STATIC VARIABLES
+    private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // dictionary to store the time taken to each request (dico<requestID, send time>)
+    private static FileWriter fileWriter = null;                               // fileWriter used to export measurements
+    private static final Encryptor.Folder foldToSend = Encryptor.folders[FOLDIDX]; // folder encrypted
+    private static int nReceived = 0;                        // Number of responses received (used to turn off the client)
+    private static ReentrantLock lock = new ReentrantLock(); // Lock to protect the variable nReceived shared between threads
 
     // STATIC FUNCTIONS
     /**
@@ -46,20 +40,29 @@ public class Main
             return md.digest(data.getBytes());
     }
 
+    /**
+     * This function instantiates the static fileWriter to store future measures in the filePath
+     * @param filePath FilePath is the path towards the file to store into the response times.
+     */
     public static void measureSetup(String filePath)
     {
-        File file = new File(filePath); // first create file object for file placed at filepath
+        File file = new File(filePath);
         try
         {
-            fileWriter = new FileWriter(file); // create FileWriter object with file as parameter
+            fileWriter = new FileWriter(file);
         }
         catch (IOException e)
         {
-            System.err.println("ERROR CSV file creation");
+            System.err.println("ERROR file creation");
             e.printStackTrace();
         }
     }
 
+    /**
+     * This function saves the content of the static string array passwords (in the Encryptor class) into a new txt file.
+     * This allows to redo test with exactly the same encrypted files.
+     * @param passwords the static array string in Encryptor class storing the passwords used to encrypt files
+     */
     public static void savePasswords(String[] passwords)
     {
         try
@@ -79,13 +82,17 @@ public class Main
         }
     }
 
+    /**
+     * This function reads the content of the file created by the function savePasswords() and loads it
+     * into the string array password in the Encryptor class.
+     */
     public static void loadPasswords()
     {
         try
         {
             Reader reader = new FileReader("measures/passwords" + PWDLEN + ".txt");
             BufferedReader bufferedReader = new BufferedReader(reader);
-            for (int i = 0; i < nbClients; i++)
+            for (int i = 0; i < nClients; i++)
             {
                 foldToSend.passwords[i] = bufferedReader.readLine();
             }
@@ -96,6 +103,7 @@ public class Main
             e.printStackTrace();
         }
     }
+
     /**
      * Returns a random double sample following a exponential distribution
      * @param rate rate of the exponential distribution (number of events per second)
@@ -107,7 +115,7 @@ public class Main
     }
 
     /**
-     * Returns current time in seconds
+     * This function returns the current time in seconds.
      */
     public static double getCurrentTime() {
         return System.currentTimeMillis()/1000.0;
@@ -117,19 +125,20 @@ public class Main
     {
         measureSetup("measures/" + "measure-smart" + (SMART ? 1 : 0) + "-rate" + RATE + "-pwdLen" + PWDLEN + ".csv");
 
-        // Encryption of folder foldIdx
+        // Encryption
+        // Uncomment following 2 lines to encrypt the foldIdx th folder in the files directory
         //Encryptor.main(new String[]{FOLDIDX + ""});
         //savePasswords(foldToSend.passwords);
 
+        // Uncomment following line to load previously passwords used to encrypt the foldIdx th folder.
         loadPasswords();
 
-
-        double start_time = getCurrentTime(); // Start time in seconds
-        double deltaTime = 0.0;
+        double start_time = getCurrentTime();
+        double deltaTime;
         double inter_request_time = nextExp(RATE);
 
         int iClient =0;
-        while(iClient < nbClients)
+        while(iClient < nClients)
         {
             deltaTime = getCurrentTime() - start_time;
             if (deltaTime >= inter_request_time)
@@ -139,7 +148,6 @@ public class Main
                 {
                     Socket clientSocket = new Socket(serverIpAddress, portNumber);
                     ClientThread clientThread = new ClientThread(iClient, clientSocket);
-                    // Sender thread: send requests to the server
                     clientThread.start();
                     inter_request_time = nextExp(RATE);
                     start_time = getCurrentTime();
@@ -149,11 +157,9 @@ public class Main
                 {
                     e.printStackTrace();
                     System.err.println("Failed to connect to server");
-                    System.exit(-1);
                 }
                 //System.out.println("Socket created");
             }
-
         }
 
     }
@@ -163,6 +169,7 @@ public class Main
         // INSTANCE VARIABLES
         private int iClient;
         private Socket clientSocket;
+
         // Streams variables
         private InputStream inputStream = null;
         private DataInputStream dataInputStream = null;
@@ -216,7 +223,6 @@ public class Main
             // ==========================================================
             //                          SENDING
             // ==========================================================
-            //System.out.println("Run ClientSender");
             try
             {
                 String password = foldToSend.passwords[iClient];
@@ -239,13 +245,10 @@ public class Main
             {
                 e.printStackTrace();
             }
-            //System.out.println("End ClientSender");
 
             // ==========================================================
             //                          RECEIVING
             // ==========================================================
-
-            //System.out.println("Run ClientReceiver");
             try
             {
                 int requestId = dataInputStream.readInt();
@@ -262,14 +265,8 @@ public class Main
                 fileWriter.write(deltaTime + ",");
 
                 lock.lock();
-                try
-                {
-                    nReceived++;
-                }
-                finally
-                {
-                    lock.unlock();
-                }
+                try { nReceived++; }
+                finally { lock.unlock(); }
 
                 inputStream.close();
                 outputStream.close();
@@ -281,7 +278,7 @@ public class Main
             }
 
 
-            if(nReceived == nbClients)
+            if(nReceived == nClients)
             {
                 try
                 {
@@ -292,7 +289,6 @@ public class Main
                     e.printStackTrace();
                 }
             }
-            //System.out.println("End ClientReceiver");
         }
     }
 }
