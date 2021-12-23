@@ -22,28 +22,30 @@ avgRespDumb3 = [meanFile(rates[i], 3, 0, "rate evolution") for i in range(len(ra
 avgRespDumb5 = [meanFile(rates[i], 5, 0, "rate evolution") for i in range(len(rates))]
 
 plt.plot(rates, avgRespDumb3, marker='.')
-plt.title("Average response time VS request rate for 20kB files with pwdLen=3")
+plt.title("Average response time VS request rate for 20kB files with pwdLen=3 DUMB")
 plt.xlabel("Rate (# requests/s)")
 plt.ylabel("Average response time (ms)")
 plt.show()
 plt.plot(rates, avgRespDumb5, marker='.')
-plt.title("Average response time VS request rate for 20kB files with pwdLen=5")
+plt.title("Average response time VS request rate for 20kB files with pwdLen=5 DUMB")
 plt.xlabel("Rate (# requests/s)")
 plt.ylabel("Average response time (ms)")
 plt.show()
 
 # SMART
-"""#avgRespSmart3 = [meanFile(rates[i], 3, 1, "rate evolution") for i in range(len(rates))]
-#avgRespSmart5 = [meanFile(rates[i], 5, 1, "rate evolution") for i in range(len(rates))]
+avgRespSmart3 = [meanFile(rates[i], 3, 1, "rate evolution") for i in range(len(rates))]
+avgRespSmart5 = [meanFile(rates[i], 5, 1, "rate evolution") for i in range(len(rates))]
 
-plt.title("Average response time VS request rate for 20kB files with pwdLen=3")
+plt.plot(rates, avgRespDumb3, marker='.')
+plt.plot(rates, avgRespSmart3, marker='.')
+plt.title("Average response time VS request rate for 20kB files with pwdLen=3 SMART")
 plt.xlabel("Rate (# requests/s)")
 plt.ylabel("Average response time (ms)")
 plt.show()
-plt.plot(rates, avgRespDumb5, marker='.')
-plt.title("Average response time VS request rate for 20kB files with pwdLen=5")
+plt.plot(rates, avgRespSmart5, marker='.')
+plt.title("Average response time VS request rate for 20kB files with pwdLen=5 SMART")
 plt.xlabel("Rate (# requests/s)")
-plt.ylabel("Average response time (ms)")"""
+plt.ylabel("Average response time (ms)")
 plt.show()
 
 # ---- Password size variation ----
@@ -55,30 +57,30 @@ avgRespDumb25 = np.log(np.array([meanFile(25, pwdLengths[i], 0, "length evolutio
 print(avgRespDumb25)
 
 plt.plot(pwdLengths, avgRespDumb5, marker='.')
-plt.title("Average response time VS password size for 20kB files")
+plt.title("Average response time VS password size for 20kB files DUMB")
 plt.xlabel("Password size (# char)")
 plt.ylabel("log(Average response time (ms))")
 plt.show()
 
 plt.plot(pwdLengths, avgRespDumb25, marker='.')
-plt.title("Average response time VS password size for 20kB files")
+plt.title("Average response time VS password size for 20kB files DUMB")
 plt.xlabel("Password size (# char)")
 plt.ylabel("log(Average response time (ms))")
 plt.show()
 
 # SMART
-"""avgRespSmart5 = [meanFile(5, pwdLengths[i], 1, "length evolution") for i in range(len(pwdLengths))]
+avgRespSmart5 = [meanFile(5, pwdLengths[i], 1, "length evolution") for i in range(len(pwdLengths))]
 avgRespSmart25 = [meanFile(5, pwdLengths[i], 1, "length evolution") for i in range(len(pwdLengths))]
 
-plt.plot(pwdLengths, avgRespSmart5)
-plt.title("Average response time VS password size for 20kB files")
+plt.plot(pwdLengths, avgRespSmart5, marker='.')
+plt.title("Average response time VS password size for 20kB files SMART")
 plt.xlabel("Password size (# char)")
 plt.ylabel("Average response time (ms)")
 plt.show()
 
-plt.plot(pwdLengths, avgRespSmart25)
-plt.title("Average response time VS password size for 20kB files")
+plt.plot(pwdLengths, avgRespSmart25, marker='.')
+plt.title("Average response time VS password size for 20kB files SMART")
 plt.xlabel("Password size (# char)")
 plt.ylabel("Average response time (ms)")
-plt.show()"""
+plt.show()
 
