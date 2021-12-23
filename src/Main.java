@@ -15,8 +15,8 @@ public class Main
 
     // CLIENT PARAMETERS
     // Measure parameters
-    public static final boolean SMART = true;
-    private static final int RATE = 100;          // # request/s
+    public static final boolean SMART = false;
+    private static final int RATE = 50;          // # request/s
     public static final int PWDLEN = 3;
     private static final int FOLDIDX = 0;       // index of folder to encrypt
     private static final int nClients = 100;
@@ -127,8 +127,8 @@ public class Main
 
         // Encryption
         // Uncomment following 2 lines to encrypt the foldIdx th folder in the files directory
-        //Encryptor.main(new String[]{FOLDIDX + ""});
-        //savePasswords(foldToSend.passwords);
+        Encryptor.main(new String[]{FOLDIDX + ""});
+        savePasswords(foldToSend.passwords);
 
         // Uncomment following line to load previously passwords used to encrypt the foldIdx th folder.
         loadPasswords();

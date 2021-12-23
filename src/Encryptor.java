@@ -50,7 +50,7 @@ public class Encryptor {
                 d = rnd.nextDouble();
                 if (d < dicRatio)
                 {
-                    this.passwords[i] = "abc";  // Word from the dictionary
+                    this.passwords[i] = "abc";  // Word from the dictionary: a, ab, abc, test, hello, merlin
                 }
                 else
                 {
