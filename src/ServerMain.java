@@ -63,7 +63,7 @@ public class ServerMain
         // Connection between server and client
         try
         {
-            ServerSocket serverSocket = new ServerSocket(Main.portNumber, 105);
+            ServerSocket serverSocket = new ServerSocket(Main.portNumber, 100);
             System.out.println("Waiting connection");
             while(true)
             {
@@ -139,7 +139,7 @@ public class ServerMain
             {
                 Request request = readRequest(dataInputStream);
 
-                int requestId = request.getRequestId();         if(requestId < 0 || requestId > 700) { System.err.println("RECEIVE CORRUPTED REQUEST");}
+                int requestId = request.getRequestId();
                 byte[] hashPwd = request.getHashPassword();
                 int pwdLength = request.getLengthPwd();
                 long fileLength = request.getLengthFile();
