@@ -141,36 +141,37 @@ plt.ylabel("Average response time (ms)")
 plt.show()
 
 # ---- Password size variation ----
-pwdLengths = [1, 2, 3, 4, 5, 6]
+pwdLengths = [3, 4, 5, 6]
 
 
 # DUMB
-avgRespDumb5P = np.log(np.array([meanFile(5, pwdLengths[i], 0, "length evolution") for i in range(len(pwdLengths))]))
-avgRespDumb25P = np.log(np.array([meanFile(25, pwdLengths[i], 0, "length evolution") for i in range(len(pwdLengths))]))
+avgRespDumb20P = np.array([meanFile(20, pwdLengths[i], 0, "length evolution") for i in range(len(pwdLengths))])
+avgRespDumb80P = np.array([meanFile(80, pwdLengths[i], 0, "length evolution") for i in range(len(pwdLengths))])
 
-plt.plot(pwdLengths, avgRespDumb5P, marker='.')
+plt.plot(pwdLengths, avgRespDumb20P, marker='.')
 plt.title("Average response time VS password size for 20kB files DUMB")
 plt.xlabel("Password size (# char)")
 plt.ylabel("log(Average response time (ms))")
 plt.show()
 
-plt.plot(pwdLengths, avgRespDumb25P, marker='.')
+plt.plot(pwdLengths, avgRespDumb80P, marker='.')
 plt.title("Average response time VS password size for 20kB files DUMB")
 plt.xlabel("Password size (# char)")
 plt.ylabel("log(Average response time (ms))")
 plt.show()
 
 # SMART
-avgRespSmart5P = [meanFile(5, pwdLengths[i], 1, "length evolution") for i in range(len(pwdLengths))]
-avgRespSmart25P = [meanFile(5, pwdLengths[i], 1, "length evolution") for i in range(len(pwdLengths))]
+avgRespSmart20P = [meanFile(20, pwdLengths[i], 1, "length evolution") for i in range(len(pwdLengths))]
+avgRespSmart80P = [meanFile(80, pwdLengths[i], 1, "length evolution") for i in range(len(pwdLengths))]
 
-plt.plot(pwdLengths, avgRespSmart5P, marker='.')
+plt.plot(pwdLengths, avgRespSmart20P, marker='.')
 plt.title("Average response time VS password size for 20kB files SMART")
 plt.xlabel("Password size (# char)")
 plt.ylabel("Average response time (ms)")
 plt.show()
 
-plt.plot(pwdLengths, avgRespSmart25P, marker='.')
+print("avg" + str(avgRespSmart80P))
+plt.plot(pwdLengths, avgRespSmart80P, marker='.')
 plt.title("Average response time VS password size for 20kB files SMART")
 plt.xlabel("Password size (# char)")
 plt.ylabel("Average response time (ms)")
@@ -179,9 +180,9 @@ plt.show()
 
 # ---- DUMB VS. SMART ----
 # RATE
-plt.title("Average Response time (ms) VS rate (dumb and smart)")
-plt.plot(rates, avgRespDumb3R, marker='.', label="Dumb, pwdLen=3")
-plt.plot(rates, avgRespSmart3R, marker='.', label="Smart, pwdLen=3")
+plt.title("Average Response time (ms) VS rate (dumb and smart); pwdLen=3")
+plt.plot(rates, avgRespDumb3R, marker='.', label="Dumb")
+plt.plot(rates, avgRespSmart3R, marker='.', label="Smart")
 plt.xlabel("Rate (# requests/s)")
 plt.ylabel("Average response time (ms)")
 plt.legend(loc="upper left")
@@ -196,13 +197,28 @@ plt.show()
 
 
 # PWSIZE
-plt.plot(pwdLengths, avgRespDumb5P, marker='.', label="Dumb")
-plt.plot(pwdLengths, avgRespSmart5P, marker='.', label="Smart")
+plt.title("Average Response time (ms) VS pwdLength (dumb and smart); rate=20")
+plt.plot(pwdLengths, avgRespDumb20P, marker='.', label="Dumb, rate=20")
+plt.plot(pwdLengths, avgRespSmart20P, marker='.', label="Smart, rate=20")
+plt.xlabel("Pwd length (# char)")
+plt.ylabel("Average response time (ms)")
 plt.legend(loc="upper left")
 plt.show()
 
-plt.plot(pwdLengths, avgRespDumb25P, marker='.', label="Dumb")
-plt.plot(pwdLengths, avgRespSmart25P, marker='.', label="Smart")
+plt.title("Average Response time (ms) VS pwdLength (dumb and smart); rate=80")
+plt.plot(pwdLengths, avgRespDumb80P, marker='.', label="Dumb")
+plt.plot(pwdLengths, avgRespSmart80P, marker='.', label="Smart")
+plt.xlabel("Pwd length (# char)")
+plt.ylabel("Average response time (ms)")
+plt.legend(loc="upper left")
+plt.show()
+
+# BONUS ALL
+plt.title("Rate 20 and rate 80")
+plt.plot(pwdLengths, avgRespDumb20P, marker='.', label="Dumb, rate=20")
+plt.plot(pwdLengths, avgRespSmart20P, marker='.', label="Smart, rate=20")
+plt.plot(pwdLengths, avgRespDumb80P, '--', marker='.', label="Dumb, rate=80")
+plt.plot(pwdLengths, avgRespSmart80P, '--', marker='.', label="Smart, rate=80")
 plt.legend(loc="upper left")
 plt.show()
 

@@ -11,7 +11,7 @@ public class Main
 {
     // SERVER PARAMETERS
     private static final String serverIpAddress = "91.182.98.69";//"81.241.22.42";
-    public static final int portNumber = 15679;
+    public static final int portNumber = 3333;
 
     // CLIENT PARAMETERS
     // Measure parameters
