@@ -10,8 +10,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Main
 {
     // SERVER PARAMETERS
-    private static final String serverIpAddress = "91.182.98.69";//"81.241.22.42";
-    public static final int portNumber = 15679;
+    private static final String serverIpAddress = "81.243.151.129";//"81.241.22.42";
+    public static final int portNumber = 3333;
 
     // CLIENT PARAMETERS
     // Measure parameters
