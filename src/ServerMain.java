@@ -19,7 +19,7 @@ public class ServerMain
 {
     // SERVER PARAMETERS
     private static final boolean isSmart = Main.SMART;
-    private static final int N_THREADS = 12;
+    private static final int N_THREADS = 6;
     private static final ReentrantLock lock = new ReentrantLock();
 
     // Mean service time E[S] for task 3
@@ -187,13 +187,14 @@ public class ServerMain
                 sendResponse(dataOutputStream, requestId, fileLen2);
                 dataOutputStream.flush();
                 FileManagement.sendFile(inDecrypted, dataOutputStream);
+                double end = System.currentTimeMillis();
 
                 System.out.println("Server replies : (requestId, fileLength) = (" + requestId + ", " + fileLen2 + ")");
                 inDecrypted.close();
 
                 lock.lock();
                 try {
-                    mst += (System.currentTimeMillis()-start);
+                    mst += (end-start);
                     nReceived += 1;
                 }
                 finally {

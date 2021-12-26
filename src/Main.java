@@ -16,8 +16,8 @@ public class Main
     // CLIENT PARAMETERS
     // Measure parameters
     public static final boolean SMART = false;
-    private static final int RATE = 80;          // # request/s
-    public static final int PWDLEN = 5;
+    private static final double RATE = 1;          // # request/s
+    public static final int PWDLEN = 3;
     private static final int FOLDIDX = 0;       // index of folder to encrypt
     private static final int nClients = 100;
 
@@ -105,7 +105,7 @@ public class Main
     }
 
     /**
-     * Returns a random double sample following a exponential distribution
+     * Returns a random double sample following an exponential distribution
      * @param rate rate of the exponential distribution (number of events per second)
      */
     public static double nextExp(double rate)
