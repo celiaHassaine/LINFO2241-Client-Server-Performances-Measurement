@@ -151,13 +151,13 @@ avgRespDumb80P = np.array([meanFile(80, pwdLengths[i], 0, "length evolution") fo
 plt.plot(pwdLengths, avgRespDumb20P, marker='.')
 plt.title("Average response time VS password size for 20kB files DUMB")
 plt.xlabel("Password size (# char)")
-plt.ylabel("log(Average response time (ms))")
+plt.ylabel("Average response time (ms)")
 plt.show()
 
 plt.plot(pwdLengths, avgRespDumb80P, marker='.')
 plt.title("Average response time VS password size for 20kB files DUMB")
 plt.xlabel("Password size (# char)")
-plt.ylabel("log(Average response time (ms))")
+plt.ylabel("Average response time (ms)")
 plt.show()
 
 # SMART
@@ -188,12 +188,23 @@ plt.ylabel("Average response time (ms)")
 plt.legend(loc="upper left")
 plt.show()
 
+plt.title("Average Response time (ms) VS rate (dumb and smart)")
 plt.plot(rates, avgRespDumb5R, marker='.', label="Dumb, pwdLen=5")
 plt.plot(rates, avgRespSmart5R, marker='.', label="Smart, pwdLen=5")
 plt.xlabel("Rate (# requests/s)")
 plt.ylabel("Average response time (ms)")
 plt.legend(loc="upper left")
 plt.show()
+print("mean dumb :",avgRespDumb5R[-1])
+print("mean smart :",avgRespSmart5R[-1])
+perc1 = (avgRespDumb5R[-1]-avgRespSmart5R[-1])/avgRespDumb5R[-1]
+perc2 = (avgRespDumb5R[-2]-avgRespSmart5R[-2])/avgRespDumb5R[-2]
+perc3 = (avgRespDumb5R[-3]-avgRespSmart5R[-3])/avgRespDumb5R[-3]
+perc4 = (avgRespDumb5R[-4]-avgRespSmart5R[-4])/avgRespDumb5R[-4]
+print(perc1)
+print(perc2)
+print(perc3)
+print(perc4)
 
 
 # PWSIZE
@@ -212,6 +223,7 @@ plt.xlabel("Pwd length (# char)")
 plt.ylabel("Average response time (ms)")
 plt.legend(loc="upper left")
 plt.show()
+print(avgRespSmart80P)
 
 # BONUS ALL
 plt.title("Rate 20 and rate 80")
@@ -221,5 +233,13 @@ plt.plot(pwdLengths, avgRespDumb80P, '--', marker='.', label="Dumb, rate=80")
 plt.plot(pwdLengths, avgRespSmart80P, '--', marker='.', label="Smart, rate=80")
 plt.legend(loc="upper left")
 plt.show()
+
+
+def mu(avgResp, rate, m):
+    return (1+(rate*avgResp))/(m*avgResp)
+
+mu4 = mu(avgRespDumb80P, 80, 12)
+print("mu last scenario", mu4)
+
 
 

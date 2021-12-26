@@ -8,9 +8,11 @@ import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class ServerMain
@@ -18,6 +20,11 @@ public class ServerMain
     // SERVER PARAMETERS
     private static final boolean isSmart = Main.SMART;
     private static final int N_THREADS = 12;
+    private static final ReentrantLock lock = new ReentrantLock();
+
+    // Mean service time E[S] for task 3
+    private static double mst = 0.0;
+    private static int nReceived = 0;
 
     // STATIC VARIABLES AND FUNCTIONS
     private static Map<String, String> dictionary;
@@ -58,7 +65,6 @@ public class ServerMain
 
         // ThreadPool creation
         ExecutorService threadPool = Executors.newFixedThreadPool(N_THREADS);
-
 
         // Connection between server and client
         try
@@ -110,6 +116,7 @@ public class ServerMain
         @Override
         public void run()
         {
+            double start = System.currentTimeMillis();
             // Streams creation
             InputStream inputStream = null;
             DataInputStream dataInputStream = null;
@@ -183,6 +190,18 @@ public class ServerMain
 
                 System.out.println("Server replies : (requestId, fileLength) = (" + requestId + ", " + fileLen2 + ")");
                 inDecrypted.close();
+
+                lock.lock();
+                try {
+                    mst += (System.currentTimeMillis()-start);
+                    nReceived += 1;
+                }
+                finally {
+                    lock.unlock();
+                }
+                if (nReceived == 100) {
+                    System.out.println("mst = "+mst/100);
+                }
             }
             catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e)
             {

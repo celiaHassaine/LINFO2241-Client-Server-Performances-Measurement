@@ -10,14 +10,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Main
 {
     // SERVER PARAMETERS
-    private static final String serverIpAddress = "81.243.151.129";//"81.241.22.42";
+    private static final String serverIpAddress = "localhost";//"81.241.22.42";
     public static final int portNumber = 3333;
 
     // CLIENT PARAMETERS
     // Measure parameters
-    public static final boolean SMART = true;
+    public static final boolean SMART = false;
     private static final int RATE = 80;          // # request/s
-    public static final int PWDLEN = 6;
+    public static final int PWDLEN = 5;
     private static final int FOLDIDX = 0;       // index of folder to encrypt
     private static final int nClients = 100;
 
@@ -127,8 +127,8 @@ public class Main
 
         // Encryption
         // Uncomment following 2 lines to encrypt the foldIdx th folder in the files directory
-        //Encryptor.main(new String[]{FOLDIDX + ""});
-        //savePasswords(foldToSend.passwords);
+        Encryptor.main(new String[]{FOLDIDX + ""});
+        savePasswords(foldToSend.passwords);
 
         // Uncomment following line to load previously passwords used to encrypt the foldIdx th folder.
         loadPasswords();
