@@ -70,8 +70,6 @@ abstract class BruteForce
         }
         else
         {
-            // TODO: https://www.javatpoint.com/java-ascii-table
-            // change the for loop by : for(char c = ' '; c <= '~' && !found; c++) to handle all characters
             for(char c = 'a'; c <= 'z' && !found; c++)
             {
                 guess[i] = c;

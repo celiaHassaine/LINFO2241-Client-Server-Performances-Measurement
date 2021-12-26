@@ -8,13 +8,12 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.LinkedList;
 import java.util.Random;
 
 public class Encryptor {
     public static final Folder[] folders = new Folder[] {new Folder("20KB", 5),
             new Folder("50KB", 5), new Folder("100KB", 5),
-            new Folder("5MB", 5), new Folder("50MB", 2), new Folder("pdf",2)};
+            new Folder("5MB", 5), new Folder("50MB", 2), new Folder("pdf",2)}; // All folders
     public static final double dicRatio = 0.3;
 
     public static class Folder
@@ -40,6 +39,10 @@ public class Encryptor {
             return rootFolder+"/Files-" + size + "/" + "file-"+i+".bin";
         }
 
+        /**
+         * Compute the random passwords for all the files of this folder.
+         * Each passwords has a chance of (dicRatio*100)% to be in the dictionary of frequent passwords.
+         */
         public void computePasswords()
         {
             Random rnd = new Random(42);
@@ -49,7 +52,8 @@ public class Encryptor {
                 d = rnd.nextDouble();
                 if (d < dicRatio)
                 {
-                    this.passwords[i] = "abc";  // Word from the dictionary: a, ab, abc, test, hello, merlin
+                    this.passwords[i] = "abc";  // Change by a password in the dictionary of the wanted size
+                    // Examples of passwords in the dictionary: a, ab, abc, test, hello, merlin
                 }
                 else
                 {
@@ -59,7 +63,10 @@ public class Encryptor {
         }
     }
 
-
+    /**
+     * Encrypt folder at index args[0]
+     * @param args array that contains the index of the folder to encrypt
+     */
     public static void main(String[] args) {
         //encryptFolder(folders[0]);
         encryptFolder(folders[Integer.parseInt(args[0])]);

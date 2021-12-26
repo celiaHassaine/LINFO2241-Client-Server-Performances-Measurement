@@ -22,7 +22,7 @@ public class Main
     private static final int nClients = 100;
 
     // STATIC VARIABLES
-    private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // dictionary to store the time taken to each request (dico<requestID, send time>)
+    private static final HashMap<Integer, Long> startTimes = new HashMap<>();  // dictionary to store the time taken for each request (dico<requestID, send time>)
     private static FileWriter fileWriter = null;                               // fileWriter used to export measurements
     private static final Encryptor.Folder foldToSend = Encryptor.folders[FOLDIDX]; // folder encrypted
     private static int nReceived = 0;                        // Number of responses received (used to turn off the client)
@@ -126,12 +126,11 @@ public class Main
         measureSetup("measures/" + "measure-smart" + (SMART ? 1 : 0) + "-rate" + RATE + "-pwdLen" + PWDLEN + ".csv");
 
         // Encryption
-        // Uncomment following 2 lines to encrypt the foldIdx th folder in the files directory
         Encryptor.main(new String[]{FOLDIDX + ""});
         savePasswords(foldToSend.passwords);
 
-        // Uncomment following line to load previously passwords used to encrypt the foldIdx th folder.
-        loadPasswords();
+        // Uncomment following line and comment the 2 previous lines to load previously passwords used to encrypt the foldIdx th folder.
+        //loadPasswords();
 
         double start_time = getCurrentTime();
         double deltaTime;
@@ -143,7 +142,7 @@ public class Main
             deltaTime = getCurrentTime() - start_time;
             if (deltaTime >= inter_request_time)
             {
-                // Connection between with server
+                // Connection with server
                 try
                 {
                     Socket clientSocket = new Socket(serverIpAddress, portNumber);
@@ -158,7 +157,6 @@ public class Main
                     e.printStackTrace();
                     System.err.println("Failed to connect to server");
                 }
-                //System.out.println("Socket created");
             }
         }
 
@@ -216,7 +214,10 @@ public class Main
             }
         }
 
-
+        /**
+         * This method is called when clientThread.start() is executed. Each thread deals with the sending
+         * of a request and the reception from the server.
+         */
         @Override
         public void run()
         {
@@ -237,7 +238,7 @@ public class Main
                 sendRequest(dataOutputStream, iClient, hashPwd, pwdLength, fileLength);
                 dataOutputStream.flush();
                 FileManagement.sendFile(inFile, dataOutputStream);
-                startTimes.put(iClient, System.currentTimeMillis());
+                startTimes.put(iClient, System.currentTimeMillis()); // Place the sending time in the dictionary
                 System.out.println("Client sends : (requestId, hashPwd, pwdLength, fileLength) = (" + iClient + ", " + hashPwd + ", " + pwdLength + ", " + fileLength + ")");
                 inFile.close();
             }
@@ -260,7 +261,7 @@ public class Main
                 FileManagement.receiveFile(inputStream, outFile, fileLengthServer);
 
 
-                long deltaTime = System.currentTimeMillis() - startTimes.get(requestId);
+                long deltaTime = System.currentTimeMillis() - startTimes.get(requestId); // Compute delay
                 System.out.println("\t Time observed by the client "+requestId+": " + deltaTime + "ms");
                 fileWriter.write(deltaTime + ",");
 

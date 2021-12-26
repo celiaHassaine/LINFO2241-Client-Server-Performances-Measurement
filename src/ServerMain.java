@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,10 +19,10 @@ public class ServerMain
     // SERVER PARAMETERS
     private static final boolean isSmart = Main.SMART;
     private static final int N_THREADS = 6;
-    private static final ReentrantLock lock = new ReentrantLock();
+    private static final ReentrantLock lock = new ReentrantLock(); // Lock for the variable mst and nReceived
 
     // Mean service time E[S] for task 3
-    private static double mst = 0.0;
+    private static double mst = 0.0; // Mean service time (mst)
     private static int nReceived = 0;
 
     // STATIC VARIABLES AND FUNCTIONS
@@ -114,6 +113,11 @@ public class ServerMain
         }
 
         @Override
+        /**
+         * This method is called when threadPool.execute(requ) is executed. Each thread deals with finding
+         * the password from the hash received, find the corresponding key, decrypt the file and finally
+         * send the decrypted file back to the client.
+         */
         public void run()
         {
             double start = System.currentTimeMillis();
@@ -158,7 +162,7 @@ public class ServerMain
                 FileManagement.receiveFile(inputStream, outFile, fileLength);
 
                 // BRUTEFORCE:
-                // Password is determined by using a bruteforce method implemented in the classes: BruteForce, DumbBruteForce, SmarterBruteForce
+                // Password is determined by using a bruteforce method implemented in the classes: DumbBruteForce, SmarterBruteForce
                 System.out.println("-- Starting bruteforce for request " + requestId + " -- ");
                 BruteForce BF = isSmart ? new SmarterBruteForce(pwdLength, hashPwd, dictionary): new DumbBruteForce(pwdLength, hashPwd);
 
@@ -173,8 +177,7 @@ public class ServerMain
                     e.details();
                     return;
                 }
-                System.out.println("PASSWORD FOUND: " + pwdFound);
-                System.out.println("-- End bruteforce for request " + requestId + "-- ");
+                System.out.println("PASSWORD FOUND: " + pwdFound + " for requestID: "+requestId);
 
                 // Send the decryptedFile
                 File decryptedFile = new File("tmp/file-" + requestId + "-decrypted-server" + ".bin");
@@ -201,7 +204,7 @@ public class ServerMain
                     lock.unlock();
                 }
                 if (nReceived == 100) {
-                    System.out.println("mst = "+mst/100);
+                    System.out.println("Mean service time = "+mst/100);
                 }
             }
             catch (IOException | NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | InvalidKeyException e)
